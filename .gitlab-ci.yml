@@ -1,0 +1,14 @@
+image: docker:latest
+
+
+before_script:
+  - apk add --no-cache --update make
+
+after_script:
+  - make clean-docker
+
+tests:
+  script:
+  - make test
+  only:
+  - master
