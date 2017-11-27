@@ -20,10 +20,8 @@ from apis import routes as api_routes
 from apis import mApi
 from app import (
     add_route,
-    start_event_connection,
     start_task_manager,
     stop_db_pool,
-    stop_event_connection,
     stop_task_manager,
 )
 from blueprints import routes as blueprint_routes
@@ -44,7 +42,6 @@ log = logging.getLogger(__name__)
 def create_tables():
     """Create all the tables needed for the test."""
     DB_URI = f'postgresql://{C.DB_USER}:{C.DB_PASSWORD}@{C.DB_HOST}:5432/{C.DB_NAME}'
-    log.error(DB_URI)
     if database_exists(DB_URI):
         drop_database(DB_URI)
     create_database(DB_URI)
@@ -127,11 +124,9 @@ def cli(loop, test_client, create_tables):
         *probe_routes,
         *cargo_routes,
     )
-    app.on_startup.append(start_event_connection)
     app.on_startup.append(start_task_manager)
     app.on_startup.append(start_db_pool)
 
-    app.on_cleanup.append(stop_event_connection)
     app.on_cleanup.append(stop_task_manager)
     app.on_cleanup.append(stop_db_pool)
     return loop.run_until_complete(test_client(app))

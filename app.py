@@ -11,15 +11,14 @@ import logging.config
 import sys
 
 from aiohttp import web
-from aiokafka import AIOKafkaProducer
 from aiopg.sa import create_engine
 from psycopg2 import OperationalError
+from rampante import scheduler, streaming
 
 from apis import routes as api_routes
 from blueprints import routes as blueprint_routes
 from cargos import routes as cargo_routes
 from config import Config as C
-from events import listener
 from jobs import routes as job_routes
 from probes import routes as probe_routes
 
@@ -59,26 +58,16 @@ async def stop_db_pool(app):
         await app["db"].wait_closed()
 
 
-async def start_event_connection(app):
-    """Connect to Kafka."""
-    connection = AIOKafkaProducer(loop=app.loop, bootstrap_servers=C.KAFKA_URI)
-    await connection.start()
-    app['events_queue'] = connection
-
-
-async def stop_event_connection(app):
-    """Close connection with Kafka."""
-    if 'events_queue' in app:
-        await app['events_queue'].stop()
-
-
 async def start_task_manager(app):
-    """Load task manager."""
-    app['task_manager'] = asyncio.ensure_future(listener.scheduler.main(app))
+    """Connect to the streams."""
+    await streaming.start(server=C.STREAM_URI, client_name="service-01", service_group="service-spawner", loop=app.loop)
+    app['task_manager'] = asyncio.ensure_future(
+        scheduler(loop=app.loop, queue_size=50))
 
 
 async def stop_task_manager(app):
     """Cancel task manager."""
+    await streaming.stop()
     if 'task_manager' in app:
         app['task_manager'].cancel()
         await app['task_manager']
@@ -98,12 +87,10 @@ if __name__ == '__main__':
     )
 
     # On-startup tasks
-    app.on_startup.append(start_event_connection)
     app.on_startup.append(start_task_manager)
     app.on_startup.append(start_db_pool)
     # Clean-up tasks
     app.on_cleanup.append(stop_task_manager)
-    app.on_cleanup.append(stop_event_connection)
     app.on_cleanup.append(stop_db_pool)
 
     web.run_app(app, host=host, port=port)

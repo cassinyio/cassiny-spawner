@@ -10,6 +10,7 @@ import logging
 from uuid import uuid4
 
 from aiohttp.web import json_response
+from rampante import streaming
 from sqlalchemy.sql import select
 
 from apis.models import mApi
@@ -76,7 +77,7 @@ class APIs(WebView):
         }
         await asyncio.sleep(5)
 
-        await self.send_event("service.api.create", event)
+        await streaming.publish("service.api.create", event)
 
         message = f"We are preparing {name}"
         body = {"message": message}
@@ -110,7 +111,7 @@ class APIs(WebView):
             }
 
             # emit event
-            await self.send_event("service.api.delete", event)
+            await streaming.publish("service.api.delete", event)
 
             user_message = f"We are removing {deleted_api.name}"
             body = {"message": user_message}

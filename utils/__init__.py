@@ -1,11 +1,11 @@
 """Collections of utils."""
 
-from utils.server import WebView, send_event
+from utils.server import WebView
 from utils.name_generator import naminator
 from utils.auth import verify_token
 from utils.code import MakeTarFromFo
 
 __all__ = (
-    "WebView", "naminator", 'send_event',
+    "WebView", "naminator",
     "verify_token", "MakeTarFromFo",
 )

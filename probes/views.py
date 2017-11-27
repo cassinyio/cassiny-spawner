@@ -13,6 +13,7 @@ from uuid import uuid4
 import msgpack
 from aiohttp.web import json_response
 from psycopg2 import DataError
+from rampante import streaming
 from sqlalchemy.sql import select
 
 from blueprints.models import mBlueprint
@@ -89,7 +90,7 @@ class Probe(WebView):
             "specs": data,
         }
 
-        await self.send_event("service.probe.create", event)
+        await streaming.publish("service.probe.create", event)
 
         message = f"We are preparing your probe {name}!"
         return json_response({"message": message})

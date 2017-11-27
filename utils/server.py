@@ -5,24 +5,9 @@ Collection of utils for Views.
 All rights reserved.
 """
 
-from typing import Dict
-
-import msgpack
 from aiohttp import web
 
 from config import Config
-
-
-async def send_event(events_queue, routing_key: str, message: Dict):
-    """
-    Send events to a given queue.
-
-    :route_key: a str with the route key
-    :message: a dict that will be msgpacked
-    """
-    body = msgpack.packb(message)
-
-    await events_queue.send_and_wait(routing_key, body)
 
 
 class WebView (web.View):
@@ -43,18 +28,6 @@ class WebView (web.View):
     @property
     def db(self):
         return self.request.app["db"]
-
-    async def send_event(self, routing_key: str, message: Dict):
-        """
-        Send events to a given queue.
-
-        :route_key: a str with the route key
-        :message: a dict that will be msgpacked
-        """
-        await send_event(
-            self.request.app["events_queue"],
-            routing_key=routing_key,
-            message=message)
 
     async def query_db(self, query, many=False, get_result=True):
         """Simplify calling the db."""

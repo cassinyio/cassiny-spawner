@@ -3,14 +3,13 @@ import logging.config
 
 from sqlalchemy import create_engine
 
-from apis.models import mApi
-from blueprints.models import mBlueprint
-from cargos.models import mCargo
-from jobs.models import mJob
-from probes.models import mProbe
+import apis.models  # noqa
+import blueprints.models  # noqa
+import cargos.models  # noqa
+import jobs.models  # noqa
+import probes.models  # noqa
 from config import Config as C
 from factory import metadata
-
 
 logging.config.dictConfig(C.DEFAULT_LOGGING)
 log = logging.getLogger(__name__)

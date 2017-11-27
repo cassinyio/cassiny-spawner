@@ -10,6 +10,7 @@ import logging
 from uuid import uuid4
 
 from aiohttp.web import json_response
+from rampante import streaming
 from sqlalchemy.sql import select
 
 from cargos import serializers
@@ -92,7 +93,7 @@ class Cargo(WebView):
             "size": schema.data["size"],
         }
 
-        await self.send_event("service.cargo.create", event)
+        await streaming.publish("service.cargo.create", event)
 
         message = f"We are preparing your cargo {name}"
         return json_response({"message": message})

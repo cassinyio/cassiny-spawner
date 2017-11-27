@@ -8,6 +8,7 @@ All rights reserved.
 import logging
 
 from aiohttp.web import json_response
+from rampante import streaming
 from sqlalchemy.sql import select
 
 from blueprints.models import mBlueprint
@@ -78,7 +79,7 @@ class Jobs(WebView):
             "specs": data
         }
 
-        await self.send_event("service.probe.create", event)
+        await streaming.publish("service.probe.create", event)
 
         message = f"We are preparing {name}"
         return json_response({"message": message})
@@ -109,7 +110,7 @@ class Jobs(WebView):
                 "name": deleted_job.name,
             }
 
-            await self.send_event("service.probe.delete", event)
+            await streaming.publish("service.probe.delete", event)
 
             user_message = f"We are removing {deleted_job.name}"
             body = {"message": user_message}

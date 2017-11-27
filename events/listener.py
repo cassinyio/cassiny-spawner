@@ -10,21 +10,20 @@ import logging
 from secrets import token_urlsafe
 from typing import Dict
 
+from rampante import streaming, subscribe_on
 from sqlalchemy.sql import select
 
 from apis.models import mApi
 from blueprints.models import mBlueprint
 from cargos.models import mCargo, mSpaceDock
-from events import scheduler
 from jobs.models import mJob
 from probes.models import mProbe
 from spawner import Spawner
-from utils import send_event
 
 log = logging.getLogger(__name__)
 
 
-@scheduler.add("service.cargo.create")
+@subscribe_on("service.cargo.create")
 async def create_cargo(queue: str, event: Dict, app) -> None:
     """Task `cargo.create` events."""
     # select the first spacedock
@@ -48,7 +47,7 @@ async def create_cargo(queue: str, event: Dict, app) -> None:
             "user_id": event['user_id'],
             "message": message
         }
-        await send_event(app['events_queue'], "user.websocket", event)
+        await streaming.publish("user.websocket", event)
         return
 
     access_key = token_urlsafe(15).upper()
@@ -89,10 +88,10 @@ async def create_cargo(queue: str, event: Dict, app) -> None:
             "user_id": event['user_id'],
             "message": message
         }
-        await send_event(app['events_queue'], "user.websocket", event)
+        await streaming.publish("user.websocket", event)
 
 
-@scheduler.add("service.api.create")
+@subscribe_on("service.api.create")
 async def create_api(queue: str, event: Dict, app):
     """Task `api.create` events."""
     specs = event["specs"]
@@ -122,7 +121,7 @@ async def create_api(queue: str, event: Dict, app):
             "user_id": event['user_id'],
             "message": message
         }
-        await send_event(app['events_queue'], "user.websocket", event)
+        await streaming.publish("user.websocket", event)
         return
 
     cargo_id = specs['cargo_id']
@@ -148,7 +147,7 @@ async def create_api(queue: str, event: Dict, app):
             "user_id": event['user_id'],
             "message": message
         }
-        await send_event(app['events_queue'], "user.websocket", event)
+        await streaming.publish("user.websocket", event)
 
     specs['repository'] = blueprint.repository
     specs['blueprint'] = ":".join((blueprint.name, blueprint.name))
@@ -179,7 +178,7 @@ async def create_api(queue: str, event: Dict, app):
     return
 
 
-@scheduler.add("service.probe.create")
+@subscribe_on("service.probe.create")
 async def create_probe(queue, event, app):
     """Task `probe.create` events."""
     specs = event["specs"]
@@ -223,7 +222,7 @@ async def create_probe(queue, event, app):
             "user_id": user_id,
             "message": message
         }
-        await send_event(app['events_queue'], "user.websocket", event)
+        await streaming.publish("user.websocket", event)
         return
 
     specs.update({
@@ -255,10 +254,10 @@ async def create_probe(queue, event, app):
             "user_id": event['user_id'],
             "message": message
         }
-        await send_event(app['events_queue'], "user.websocket", event)
+        await streaming.publish("user.websocket", event)
 
 
-@scheduler.add("service.job.create")
+@subscribe_on("service.job.create")
 async def create_job(queue, event, app):
     """Task `job.create` events."""
     specs = event["specs"]
@@ -288,7 +287,7 @@ async def create_job(queue, event, app):
             "user_id": user_id,
             "message": message
         }
-        await send_event(app['events_queue'], "user.websocket", event)
+        await streaming.publish("user.websocket", event)
         return
 
     specs['repository'] = blueprint.repository
@@ -320,4 +319,4 @@ async def create_job(queue, event, app):
             "user_id": event['user_id'],
             "message": message
         }
-        await send_event(app['events_queue'], "user.websocket", event)
+        await streaming.publish("user.websocket", event)

@@ -1,10 +1,8 @@
 """
-    config.py
-    ~~~~~~~~~
-    Configuration for mcc.cassiny.io
+Configuration for mcc.cassiny.io.
 
-    :copyright: (c) 2017, Cassiny.io OÜ.
-    All rights reserved.
+:copyright: (c) 2017, Cassiny.io OÜ.
+All rights reserved.
 """
 
 import os
@@ -33,8 +31,8 @@ class Config():
     MCC_INTERNAL_URL = os.getenv(
         "MCC_INTERNAL_URL", "https://cassiny_nginx:8443")
 
-    # KAFKA
-    KAFKA_URI = os.getenv("KAFKA_URI", "localhost:9092")
+    # MESSAGE QUEUE
+    STREAM_URI = os.getenv("STREAM_URI", "nats://127.0.0.1:4222")
 
     # REDIS
     REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
