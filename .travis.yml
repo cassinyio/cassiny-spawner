@@ -1,4 +1,4 @@
-sourcsudo: required
+sudo: required
 
 language: python
 python:
@@ -11,6 +11,11 @@ env:
   global:
     - COMMIT=${TRAVIS_COMMIT::8}
 
+stages:
+  - test
+  - name: deploy
+    if: branch = master
+
 before_install:
   - sudo apt-get update
   - sudo apt-get install docker-ce
@@ -18,15 +23,18 @@ before_install:
 script:
   - pip install tox
   - make test
-
-after_success:
   - make clean-docker
-  - docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-  - export REPO=cassinyio/cassiny-spawner
-  - export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH ; fi`
-  - docker build -f Dockerfile -t $REPO:$COMMIT .
-  - docker tag $REPO:$COMMIT $REPO:$TAG
-  - docker push $REPO
+
+jobs:
+  include:
+    - stage: deploy
+      script:
+        - docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+        - export REPO=cassinyio/cassiny-spawner
+        - export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH ; fi`
+        - docker build -f Dockerfile -t $REPO:$COMMIT .
+        - docker tag $REPO:$COMMIT $REPO:$TAG
+        - docker push $REPO
 
 notifications:
   webhooks:
