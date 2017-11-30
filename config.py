@@ -5,8 +5,8 @@ Configuration for mcc.cassiny.io.
 All rights reserved.
 """
 
-import os
 import logging
+import os
 
 log = logging.getLogger(__name__)
 

@@ -18,6 +18,7 @@ test:
 	@docker network create test
 	@docker pull minio/minio:RELEASE.2017-08-05T00-00-53Z
 	@docker pull cassinyio/notebook:4018e4ee
+	@docker swarm init
 	@docker run -d --name streams --network test -p 4222:4222 nats-streaming:0.6.0
 	@docker run -d --name postgres --network test -e POSTGRES_DB=$(POSTGRES_DB) -e POSTGRES_USER=$(POSTGRES_USER) -e POSTGRES_PASSWORD=$(POSTGRES_PASSWORD) postgres:10.0
 	@docker build -t $(SERVICE) -f Dockerfile.test .
@@ -27,6 +28,7 @@ clean-docker:
 	@docker rm -f streams
 	@docker rm -f postgres
 	@docker network rm test
+	@docker swarm -f leave
 
 build:
 	@docker build -t $(SERVICE) -f Dockerfile .
