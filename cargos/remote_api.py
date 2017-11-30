@@ -1,10 +1,10 @@
 """
-    remote_api.py
-    ~~~~~~~~~
-    Remote API to control cargo servers
+remote_api.py
+~~~~~~~~~
+Remote API to control cargo servers
 
-    :copyright: (c) 2017, Cassiny.io OÜ.
-    All rights reserved.
+:copyright: (c) 2017, Cassiny.io OÜ.
+All rights reserved.
 """
 
 import logging

@@ -46,7 +46,7 @@ async def start_db_pool(app):
             host=C.DB_HOST,
         )
     except OperationalError as err:
-        log.error("Are you sure that POSTGRE is working?")
+        log.error("Are you sure that POSTGRE SQL is working?")
         raise err
     app["db"] = engine
 

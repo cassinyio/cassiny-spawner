@@ -1,4 +1,3 @@
-
 import re
 
 from utils.name_generator import naminator

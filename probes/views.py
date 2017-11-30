@@ -32,7 +32,7 @@ class Probe(WebView):
 
     @verify_token
     async def get(self, user_id):
-        """Used to get information about a Probe"""
+        """Get info about a probe."""
 
         async with self.db.acquire() as conn:
             query = select([
