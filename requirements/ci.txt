@@ -5,4 +5,4 @@ pytest==3.3.0
 pytest-aiohttp==0.2.0
 tox==2.9.1
 pytest-cov==2.5.1
-SQLAlchemy-Utils==0.32.19
+SQLAlchemy-Utils==0.32.21
