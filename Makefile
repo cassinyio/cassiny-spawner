@@ -28,7 +28,7 @@ clean-docker:
 	@docker rm -f streams
 	@docker rm -f postgres
 	@docker network rm test
-	@docker swarm -f leave
+	@docker swarm leave -f
 
 build:
 	@docker build -t $(SERVICE) -f Dockerfile .

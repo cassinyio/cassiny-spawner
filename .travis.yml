@@ -26,8 +26,6 @@ jobs:
       script:
         - make test
         - make clean-docker
-      after_success:
-        - codecov
     - stage: deploy
       script:
         - docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
