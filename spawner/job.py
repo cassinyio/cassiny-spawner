@@ -1,7 +1,4 @@
-"""
-Job controller.
-
-"""
+"""Job controller."""
 
 import logging
 from typing import Dict

@@ -21,7 +21,8 @@ class Blueprint(WebView):
     """Views to handle blueprints."""
 
     @verify_token
-    async def get(self, user_id):
+    async def get(self, payload):
+        user_id = payload["user_id"]
 
         async with self.db.acquire() as conn:
             query = select([mBlueprint])\

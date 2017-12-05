@@ -1,4 +1,4 @@
-"""Jobs endpoints."""
+"""Jobs package."""
 
 from jobs.routes import routes
 from jobs.models import mJob

@@ -8,8 +8,8 @@ All rights reserved.
 from apis.views import APIs
 
 routes = (
-    ('GET', '/v1/apis', APIs),
-    ('POST', '/v1/apis', APIs),
-    ('PATCH', '/v1/apis/{api_id}', APIs),
-    ('DELETE', '/v1/apis/{api_id}', APIs),
+    ('GET', '/spawner/apis', APIs),
+    ('POST', '/spawner/apis', APIs),
+    ('PATCH', '/spawner/apis/{api_id}', APIs),
+    ('DELETE', '/spawner/apis/{api_id}', APIs),
 )

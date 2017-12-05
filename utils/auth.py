@@ -7,6 +7,7 @@ All rights reserved.
 
 import functools
 import logging
+from types import MappingProxyType
 from typing import Mapping, Optional
 
 import jwt
@@ -22,25 +23,25 @@ from config import Config as C
 log = logging.getLogger(__name__)
 
 
-async def _validate_token(headers: Mapping, key: str=C.PUBLIC_KEY) -> Optional[int]:
+def _validate_token(headers: Mapping, key: str=C.PUBLIC_KEY) -> Optional[Mapping[str, str]]:
     """Validate the token inside the headers.
 
-    Return the user_id if correct, None in the other cases.
+    Return the payload if correct, None in the other cases.
+    The payload contains the token.
     """
-    user_id = None
+    payload: Mapping[str, str] = None
     if "Authorization" in headers:
         try:
-            encoded = headers['Authorization'].split('Bearer ')[1]
-            paylod = jwt.decode(encoded, key)
-            user_id = paylod['user_id']
+            encoded: str = headers['Authorization'].split('Bearer ')[1]
+            data = jwt.decode(encoded, key)
+            payload = {**data, "token": encoded}
         except (IndexError, DecodeError, ExpiredSignatureError):
-            log.info(f"Attempt to login with non valid/expired token")
-
-    return user_id
+            log.info(f"Attempt to login with non valid/expired token.")
+    return payload
 
 
 def verify_token(func):
-    """Check if the given jws token is valid."""
+    """Check if the given jwt is valid."""
     @functools.wraps(func)
     async def wrapped(*args, **kwargs):
 
@@ -51,12 +52,13 @@ def verify_token(func):
             request = args[-1]
 
         # check if user is logged
-        user_id = await _validate_token(request.headers)
+        payload = _validate_token(request.headers)
 
-        if user_id is None:
-            message = "Session expired"
+        if payload is None:
+            message = "Your JWT is not valid."
             return web.json_response({"message": message}, status=401)
         else:
-            response = await func(*args, user_id=user_id, **kwargs)
+            payload = MappingProxyType(payload)
+            response = await func(*args, payload=payload, **kwargs)
             return response
     return wrapped

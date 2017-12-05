@@ -46,7 +46,7 @@ async def start_db_pool(app):
             host=C.DB_HOST,
         )
     except OperationalError as err:
-        log.error("Are you sure that POSTGRE SQL is working?")
+        log.error("Are you sure that POSTGRESQL is working?")
         raise err
     app["db"] = engine
 
@@ -60,7 +60,7 @@ async def stop_db_pool(app):
 
 async def start_task_manager(app):
     """Connect to the streams."""
-    await streaming.start(server=C.STREAM_URI, client_name="service-01", service_group="service-spawner", loop=app.loop)
+    await streaming.start(server=C.STREAM_URI, client_name="service-01", service_group="cassiny-spawner", loop=app.loop)
     app['task_manager'] = asyncio.ensure_future(
         scheduler(loop=app.loop, queue_size=50))
 

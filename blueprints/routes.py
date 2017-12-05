@@ -8,5 +8,5 @@ All rights reserved.
 from blueprints.views import Blueprint
 
 routes = (
-    ('GET', '/v1/blueprints', Blueprint),
+    ('GET', '/spawner/blueprints', Blueprint),
 )

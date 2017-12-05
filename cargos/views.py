@@ -7,6 +7,7 @@ All rights reserved.
 
 
 import logging
+from typing import Mapping, Union
 from uuid import uuid4
 
 from aiohttp.web import json_response
@@ -16,7 +17,7 @@ from sqlalchemy.sql import select
 from cargos import serializers
 from cargos.models import mCargo
 from probes.models import mProbe
-from utils import WebView, naminator, verify_token
+from utils import WebView, check_quota, verify_token
 
 log = logging.getLogger(__name__)
 
@@ -25,9 +26,10 @@ class Cargo(WebView):
     """API endpoint to create, delete and modify cargos."""
 
     @verify_token
-    async def get(self, user_id):
+    async def get(self, payload: Mapping[str, Union[str, int]]):
         """Get a serialized version of the cargo object."""
-        attached_cargos = set()
+        user_id = payload['user_id']
+        attached_cargos: set = set()
 
         async with self.db.acquire() as conn:
             query = select([
@@ -67,8 +69,10 @@ class Cargo(WebView):
         return json_response({"cargos": data})
 
     @verify_token
-    async def post(self, user_id):
-        """POST view to create cargo objects."""
+    @check_quota(mCargo)
+    async def post(self, payload: Mapping[str, Union[str, int]]):
+        """Create cargos."""
+        user_id = payload['user_id']
         data = await self.request.json()
         log.debug(f"data inside post request: {data}")
 
@@ -81,26 +85,24 @@ class Cargo(WebView):
             body = {"message": message}
             return json_response(body, status=400)
 
-        # create a unique name for the cargo
-        name = naminator("cargo")
-
         # create event
         event = {
+            "token": payload['token'],
             "user_id": user_id,
             "event_uuid": uuid4().hex,
-            "name": name,
             "description": schema.data["description"],
             "size": schema.data["size"],
         }
 
         await streaming.publish("service.cargo.create", event)
 
-        message = f"We are preparing your cargo {name}"
+        message = "We are creating your cargo......."
         return json_response({"message": message})
 
     @verify_token
-    async def delete(self, user_id):
+    async def delete(self, payload: Mapping[str, Union[str, int]]):
         """DELETE view to delete cargo objects."""
+        user_id = payload["user_id"]
         cargo_id = self.request.match_info.get("cargo_id")
 
         async with self.db.acquire() as conn:

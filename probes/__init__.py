@@ -1,4 +1,4 @@
-"""Probe endpoints"""
+"""Probes package."""
 
 from probes.routes import routes
 from probes.models import mProbe, mUser_probes

@@ -8,7 +8,7 @@ All rights reserved.
 from cargos.views import Cargo
 
 routes = (
-    ('GET', '/v1/cargos', Cargo),
-    ('POST', '/v1/cargos', Cargo),
-    ('DELETE', '/v1/cargos/{cargo_id}', Cargo),
+    ('GET', '/spawner/cargos', Cargo),
+    ('POST', '/spawner/cargos', Cargo),
+    ('DELETE', '/spawner/cargos/{cargo_id}', Cargo),
 )

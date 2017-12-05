@@ -5,8 +5,8 @@ APIs views.
 All rights reserved.
 """
 
-import asyncio
 import logging
+from typing import Mapping, Union
 from uuid import uuid4
 
 from aiohttp.web import json_response
@@ -17,7 +17,7 @@ from apis.models import mApi
 from apis.serializers import APIs as ApiSchema
 from blueprints.models import mBlueprint
 from cargos.models import mCargo
-from utils import WebView, naminator, verify_token
+from utils import WebView, check_quota, verify_token
 
 log = logging.getLogger(__name__)
 
@@ -26,8 +26,9 @@ class APIs(WebView):
     """Create api and push api online."""
 
     @verify_token
-    async def get(self, user_id):
+    async def get(self, payload: Mapping[str, Union[str, int]]):
         """Get a list of APIs for the current user."""
+        user_id = payload['user_id']
         async with self.db.acquire() as conn:
             query = select([
                 mApi,
@@ -54,8 +55,10 @@ class APIs(WebView):
         return json_response(body)
 
     @verify_token
-    async def post(self, user_id: int):
+    @check_quota(mApi)
+    async def post(self, payload: Mapping[str, Union[str, int]]):
         """Create a new API endpoint."""
+        user_id = payload['user_id']
         data = await self.request.json()
 
         data, errors = ApiSchema().load(data)
@@ -66,26 +69,21 @@ class APIs(WebView):
             body = {"message": errors}
             return json_response(body, status=400)
 
-        # create a unique name for the job
-        name = naminator("api")
-
         # create event
         event = {
             "user_id": user_id,
-            "name": name,
             "specs": data
         }
-        await asyncio.sleep(5)
-
         await streaming.publish("service.api.create", event)
 
-        message = f"We are preparing {name}"
+        message = "We are creating your API......."
         body = {"message": message}
         return json_response(body)
 
     @verify_token
-    async def delete(self, user_id):
+    async def delete(self, payload: Mapping[str, Union[str, int]]):
         """Delete an API endpoint given an id."""
+        user_id = payload['user_id']
         # get the api_id from the url path
         api_id = self.request.match_info.get("api_id")
 
@@ -110,15 +108,14 @@ class APIs(WebView):
                 "name": deleted_api.name,
             }
 
-            # emit event
             await streaming.publish("service.api.delete", event)
 
             user_message = f"We are removing {deleted_api.name}"
             body = {"message": user_message}
             return json_response(body)
 
-        message = f"User has tried to remove a job that doesn't exist inside the database: {api_id}"
+        message = f"User has tried to remove an API that doesn't exist inside the database: {api_id}"
         log.error(message)
-        user_message = f"It seems that api doesn't exist anymore"
+        user_message = f"It seems that api doesn't exist anymore."
         body = {"message": user_message}
         return json_response(body)

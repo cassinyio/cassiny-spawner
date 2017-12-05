@@ -15,17 +15,18 @@ from blueprints.models import mBlueprint
 from cargos.models import mCargo
 from jobs.models import mJob
 from jobs.serializers import JobSchema
-from utils import WebView, naminator, verify_token
+from utils import WebView, check_quota, verify_token
 
 log = logging.getLogger(__name__)
 
 
 class Jobs(WebView):
-    """List, get and create Jobs"""
+    """List, get and create Jobs."""
 
     @verify_token
-    async def get(self, user_id):
+    async def get(self, payload):
         """Get a list of Jobs for the current user"""
+        user_id = payload["user_id"]
 
         async with self.db.acquire() as conn:
             query = select([
@@ -57,9 +58,10 @@ class Jobs(WebView):
         return json_response(body)
 
     @verify_token
-    async def post(self, user_id):
+    @check_quota(mJob)
+    async def post(self, payload):
         """Create a new job."""
-
+        user_id = payload["user_id"]
         data = await self.request.json()
 
         data, errors = JobSchema().load(data)
@@ -70,23 +72,21 @@ class Jobs(WebView):
             body = {"message": errors}
             return json_response(body, status=400)
 
-        name = naminator("job")
-
         # Create the new jobs
         event = {
             "user_id": user_id,
-            "name": name,
             "specs": data
         }
 
         await streaming.publish("service.probe.create", event)
 
-        message = f"We are preparing {name}"
+        message = "We are creating your job......."
         return json_response({"message": message})
 
     @verify_token
-    async def delete(self, user_id):
+    async def delete(self, payload):
         """Delete Job endpoint given and id."""
+        user_id = payload["user_id"]
         # get the job_id from the url path
         job_id = self.request.match_info.get("job_id")
 

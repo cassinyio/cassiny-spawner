@@ -1,7 +1,4 @@
-"""
-API controller.
-
-"""
+"""API controller."""
 
 
 import logging
@@ -26,7 +23,6 @@ class Api():
 
         specs: specs about how to build the Docker service.
         """
-
         image = self._spawner.get_image(specs)
 
         # we build an image for the user

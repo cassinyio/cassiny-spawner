@@ -13,6 +13,7 @@ stages:
 env:
   global:
     - COMMIT=${TRAVIS_COMMIT::8}
+    - export REPO=cassinyio/cassiny-spawner
 
 services:
   - docker
@@ -29,10 +30,9 @@ jobs:
     - stage: deploy
       script:
         - docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-        - export REPO=cassinyio/cassiny-spawner
-        - export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH ; fi`
-        - docker build -f Dockerfile -t $REPO:$COMMIT .
-        - docker tag $REPO:$COMMIT $REPO:$TAG
+        - export TAG=$TRAVIS_BRANCH
+        - docker build -f Dockerfile -t $REPO:$TAG .
+        - docker tag $REPO:$TAG $REPO:latest
         - docker push $REPO
 
 notifications:

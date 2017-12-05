@@ -13,12 +13,13 @@ from typing import Dict
 from rampante import streaming, subscribe_on
 from sqlalchemy.sql import select
 
-from apis.models import mApi
-from blueprints.models import mBlueprint
-from cargos.models import mCargo, mSpaceDock
-from jobs.models import mJob
-from probes.models import mProbe
+from apis import mApi
+from blueprints import mBlueprint
+from cargos import mCargo, mSpaceDock
+from jobs import mJob
+from probes import mProbe
 from spawner import Spawner
+from utils import naminator
 
 log = logging.getLogger(__name__)
 
@@ -47,15 +48,17 @@ async def create_cargo(queue: str, event: Dict, app) -> None:
             "user_id": event['user_id'],
             "message": message
         }
-        await streaming.publish("user.websocket", event)
+        await streaming.publish("user.notification", event)
         return
 
     access_key = token_urlsafe(15).upper()
     secret_key = token_urlsafe(30)
 
+    name = naminator("cargo")
+
     async with app['db'].acquire() as conn:
         query = mCargo.insert().values(
-            name=event['name'],
+            name=name,
             description=event['description'],
             size=event['size'],
             spacedock_id=spacedock.id,
@@ -71,11 +74,11 @@ async def create_cargo(queue: str, event: Dict, app) -> None:
         'args': "server /data",
         'repository': "minio",
         'blueprint': "minio:RELEASE.2017-08-05T00-00-53Z",
-        'networks': ["probes-network"]
+        'networks': ["cassiny-public"]
     })
 
     result = await Spawner.cargo.create(
-        name=event['name'],
+        name=name,
         user_id=user_id,
         specs=specs,
         access_key=access_key,
@@ -83,12 +86,12 @@ async def create_cargo(queue: str, event: Dict, app) -> None:
     )
 
     if result:
-        message = f"Your API ({event['name']}) has been created!"
+        message = f"Your API {name} has been created!"
         event = {
             "user_id": event['user_id'],
             "message": message
         }
-        await streaming.publish("user.websocket", event)
+        await streaming.publish("user.notification", event)
 
 
 @subscribe_on("service.api.create")
@@ -110,9 +113,10 @@ async def create_api(queue: str, event: Dict, app):
         blueprint = await result.fetchone()
 
     if blueprint is None:
-        log.error(f"Blueprint `{specs['blueprint_id']}` does not exist or "
-                  f"is not owned by user `{user_id}`"
-                  )
+        log.error(
+            f"Blueprint `{specs['blueprint_id']}` does not exist or "
+            f"is not owned by user `{user_id}`"
+        )
         message = (
             "This is an error.....we cannot create your API, "
             "did you select the right blueprint?"
@@ -121,7 +125,7 @@ async def create_api(queue: str, event: Dict, app):
             "user_id": event['user_id'],
             "message": message
         }
-        await streaming.publish("user.websocket", event)
+        await streaming.publish("user.notification", event)
         return
 
     cargo_id = specs['cargo_id']
@@ -147,18 +151,21 @@ async def create_api(queue: str, event: Dict, app):
             "user_id": event['user_id'],
             "message": message
         }
-        await streaming.publish("user.websocket", event)
+        await streaming.publish("user.notification", event)
 
     specs['repository'] = blueprint.repository
     specs['blueprint'] = ":".join((blueprint.name, blueprint.name))
-    specs['networks'] = ["api-network"]
+    specs['networks'] = ["cassiny-public"]
 
     log.debug(f"Creating an api with specs: {specs}")
+
+    # create a unique name for the job
+    name = naminator("api")
 
     async with app['db'].acquire() as conn:
         query = mApi.insert().values(
             user_id=user_id,
-            name=event['name'],
+            name=name,
             blueprint_id=blueprint.id,
             cargo_id=cargo.id,
             description=specs["description"],
@@ -167,14 +174,18 @@ async def create_api(queue: str, event: Dict, app):
         await conn.execute(query)
 
     result = await Spawner.api.create(
-        name=event['name'],
+        name=name,
         user_id=user_id,
         specs=specs
     )
 
     if result:
-        # emit positive event
-        pass
+        message = f"Your api {name} has been created!"
+        event = {
+            "user_id": event['user_id'],
+            "message": message
+        }
+        await streaming.publish("user.notification", event)
     return
 
 
@@ -222,39 +233,42 @@ async def create_probe(queue, event, app):
             "user_id": user_id,
             "message": message
         }
-        await streaming.publish("user.websocket", event)
+        await streaming.publish("user.notification", event)
         return
 
     specs.update({
         'repository': blueprint.repository,
         'blueprint': ":".join((blueprint.name, blueprint.name)),
-        'networks': ["probes-network"]
+        'networks': ["cassiny-public"]
     })
+
+    name = naminator("probe")
 
     async with app['db'].acquire() as conn:
         query = mProbe.insert().values(
             user_id=user_id,
             blueprint_id=blueprint.id,
             cargo_id=cargo_id,
-            name=event["name"],
+            name=name,
             description=specs['description'],
             specs=specs,
         )
         await conn.execute(query)
 
     result = await Spawner.probe.create(
-        name=event['name'],
+        name=name,
         user_id=user_id,
         specs=specs,
     )
 
     if result:
-        message = f"Your probe ({event['name']}) has been created!"
+        message = f"Your probe {name} has been created!"
         event = {
             "user_id": event['user_id'],
             "message": message
         }
-        await streaming.publish("user.websocket", event)
+        await streaming.publish("user.notification", event)
+    return
 
 
 @subscribe_on("service.job.create")
@@ -287,7 +301,7 @@ async def create_job(queue, event, app):
             "user_id": user_id,
             "message": message
         }
-        await streaming.publish("user.websocket", event)
+        await streaming.publish("user.notification", event)
         return
 
     specs['repository'] = blueprint.repository
@@ -295,11 +309,13 @@ async def create_job(queue, event, app):
 
     log.debug(f"Creating a job with specs: {specs}")
 
+    name = naminator("job")
+
     # job_id returns the id of the probe just created
     async with app['db'].acquire() as conn:
         query = mJob.insert().values(
             user_id=event['user_id'],
-            name=event['name'],
+            name=name,
             blueprint_id=specs["blueprint_id"],
             cargo_id=specs["cargo_id"],
             description=specs["description"],
@@ -308,15 +324,16 @@ async def create_job(queue, event, app):
         await conn.execute(query)
 
     result = await Spawner.job.create(
-        name=event['name'],
+        name=name,
         user_id=user_id,
         specs=specs,
     )
 
     if result:
-        message = f"Your job ({event['name']}) has been created!"
+        message = f"Your job {name} has been created!"
         event = {
             "user_id": event['user_id'],
             "message": message
         }
-        await streaming.publish("user.websocket", event)
+        await streaming.publish("user.notification", event)
+    return

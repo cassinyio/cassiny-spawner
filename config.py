@@ -1,5 +1,5 @@
 """
-Configuration for mcc.cassiny.io.
+Configuration for cassiny-spawner.
 
 :copyright: (c) 2017, Cassiny.io OÜ.
 All rights reserved.
@@ -20,11 +20,11 @@ class Config():
 
     # PUBLIC KEY
     try:
-        with open("/keys/jwtRS256.key.pub", mode="r") as f:
+        with open("/keys/public_key.pub", mode="r", encoding="utf-8") as f:
             PUBLIC_KEY = f.read()
     except FileNotFoundError:
         PUBLIC_KEY = ""
-        log.error("PUBLIC_KEY not found.")
+        log.error("PRIVATE KEY not found.")
 
     # MCC
     # to locally run the server
@@ -32,14 +32,10 @@ class Config():
 
     # internal url
     MCC_INTERNAL_URL = os.getenv(
-        "MCC_INTERNAL_URL", "https://cassiny-auth")
+        "MCC_INTERNAL_URL", "http://cassiny-auth")
 
-    # MESSAGE QUEUE
+    # STREAM
     STREAM_URI = os.getenv("STREAM_URI", "nats://127.0.0.1:4222")
-
-    # REDIS
-    REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
-    REDIS_PORT = os.getenv("REDIS_PORT", 6379)
 
     # DATABASE_URI
     DB_USER = os.getenv("DB_USER", "postgres")
@@ -60,6 +56,10 @@ class Config():
 
     # ip and port used to run cargo
     CARGO_DEFAULT_URL = "http://0.0.0.0:9000"
+
+    # QUOTA SERVICE
+    QUOTA_IS_ACTIVE = True
+    QUOTA_URI = 'http://cassiny-billing:8080/billing/quota'
 
     # LOGGING CONFIGURATION
     DEFAULT_LOGGING = {

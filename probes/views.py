@@ -8,6 +8,7 @@
 """
 
 import logging
+from typing import Mapping, Union
 from uuid import uuid4
 
 import msgpack
@@ -20,7 +21,7 @@ from blueprints.models import mBlueprint
 from cargos.models import mCargo
 from probes.models import mProbe
 from probes.serializers import ProbeSchema
-from utils import WebView, naminator, verify_token
+from utils import WebView, check_quota, verify_token
 
 log = logging.getLogger(__name__)
 
@@ -31,8 +32,9 @@ class Probe(WebView):
     """
 
     @verify_token
-    async def get(self, user_id):
+    async def get(self, payload: Mapping[str, Union[str, int]]):
         """Get info about a probe."""
+        user_id = payload['user_id']
 
         async with self.db.acquire() as conn:
             query = select([
@@ -68,10 +70,12 @@ class Probe(WebView):
         return json_response(body)
 
     @verify_token
-    async def post(self, user_id: int):
+    @check_quota(mProbe)
+    async def post(self, payload: Mapping[str, Union[str, int]]):
         """View to control the creation of probes."""
+        user_id = payload["user_id"]
+
         data = await self.request.json()
-        log.info(f"Data inside post request: {data}")
 
         data, errors = ProbeSchema().load(data)
 
@@ -80,29 +84,25 @@ class Probe(WebView):
             message = "A field is missing :/"
             return json_response({"message": message}, status=400)
 
-        # pick a random name for this probe
-        name = naminator("probe")
-
-        # Create the new jobs
         event = {
             "user_id": user_id,
-            "name": name,
+            "token": payload['token'],
             "specs": data,
         }
 
         await streaming.publish("service.probe.create", event)
 
-        message = f"We are preparing your probe {name}!"
+        message = "We are creating your probe......."
         return json_response({"message": message})
 
     @verify_token
-    async def patch(self, user_id):
+    async def patch(self, payload: Mapping[str, Union[str, int]]):
         """
         Patch is for:
         - stop a probe without deleting it
         - update the allocated resources
         """
-
+        user_id = payload["user_id"]
         # get the probe_ide from the url path
         probe_id = self.request.match_info.get("probe_id")
 
@@ -221,15 +221,14 @@ class Probe(WebView):
             return json_response(body)
 
     @verify_token
-    async def delete(self, user_id):
-
+    async def delete(self, payload: Mapping[str, Union[str, int]]):
+        """Delete a probe."""
         # get the probe_ide from the url path
         probe_id = self.request.match_info.get("probe_id")
+        user_id = payload['user_id']
 
         log.info(f"Request to delete probe: {probe_id}")
-
         try:
-
             async with self.db.acquire() as conn:
                 # Deleted object
                 query = mProbe.delete()\

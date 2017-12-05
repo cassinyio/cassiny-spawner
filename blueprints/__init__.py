@@ -1,4 +1,4 @@
-"""Blueprint endpoints."""
+"""Blueprint package."""
 
 from blueprints.routes import routes
 from blueprints.models import mBlueprint

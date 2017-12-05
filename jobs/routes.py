@@ -8,8 +8,8 @@ All rights reserved.
 from jobs.views import Jobs
 
 routes = (
-    ('GET', '/v1/jobs', Jobs),
-    ('POST', '/v1/jobs', Jobs),
-    ('PATCH', '/v1/jobs/{job_id}', Jobs),
-    ('DELETE', '/v1/jobs/{job_id}', Jobs),
+    ('GET', '/spawner/jobs', Jobs),
+    ('POST', '/spawner/jobs', Jobs),
+    ('PATCH', '/spawner/jobs/{job_id}', Jobs),
+    ('DELETE', '/spawner/jobs/{job_id}', Jobs),
 )
