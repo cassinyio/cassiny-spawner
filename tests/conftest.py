@@ -41,7 +41,7 @@ log = logging.getLogger(__name__)
 @pytest.fixture(scope="session")
 def create_tables():
     """Create all the tables needed for the test."""
-    DB_URI = f'postgresql://{C.DB_USER}:{C.DB_PASSWORD}@{C.DB_HOST}:5432/{C.DB_NAME}'
+    DB_URI = f'postgresql://{C.DB_USER}:{C.DB_PASSWORD}@{C.DB_HOST}:{C.DB_PORT}/{C.DB_NAME}'
     if database_exists(DB_URI):
         drop_database(DB_URI)
     create_database(DB_URI)
@@ -106,6 +106,7 @@ async def start_db_pool(app):
             password=C.DB_PASSWORD,
             database=C.DB_NAME,
             host=C.DB_HOST,
+            port=C.DB_PORT,
         )
     except OperationalError as err:
         log.error("Are you sure that POSTGRE is working?")

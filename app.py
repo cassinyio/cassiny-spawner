@@ -44,6 +44,7 @@ async def start_db_pool(app):
             password=C.DB_PASSWORD,
             database=C.DB_NAME,
             host=C.DB_HOST,
+            port=C.DB_PORT,
         )
     except OperationalError as err:
         log.error("Are you sure that POSTGRESQL is working?")

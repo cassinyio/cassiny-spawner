@@ -13,7 +13,11 @@ stages:
 env:
   global:
     - COMMIT=${TRAVIS_COMMIT::8}
-    - export REPO=cassinyio/cassiny-spawner
+    - REPO=cassinyio/cassiny-spawner
+    - DB_USER=postgres
+    - DB_PASSWORD=mysecretpassword
+    - DB_PORT=15432
+    - STREAM_URI=nats://localhost:4222
 
 services:
   - docker
@@ -24,9 +28,15 @@ jobs:
       install:
         - sudo apt-get update
         - sudo apt-get install docker-ce
+        - pip install tox codecov
+        - docker run -d --name streams -p 4222:4222 nats-streaming:0.6.0
+        - docker run -d --name postgres -e POSTGRES_DB=$POSTGRES_DB -e POSTGRES_USER=$POSTGRES_USER -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD -p $DB_PORT:5432 postgres:10.0
       script:
-        - make test
-        - make clean-docker
+        - tox
+      after_success:
+        - docker rm -f streams
+        - docker rm -f postgres
+        - codecov
     - stage: deploy
       script:
         - docker login -u $DOCKER_USER -p $DOCKER_PASSWORD

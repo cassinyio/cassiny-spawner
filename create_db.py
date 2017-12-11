@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 
 def create_tables():
     """Create db tables."""
-    dsn = f"postgresql+psycopg2://{C.DB_USER}:{C.DB_PASSWORD}@{C.DB_HOST}/{C.DB_NAME}"
+    dsn = f"postgresql+psycopg2://{C.DB_USER}:{C.DB_PASSWORD}@{C.DB_HOST}:{C.DB_PORT}/{C.DB_NAME}"
     try:
         engine = create_engine(dsn)
         metadata.create_all(engine)

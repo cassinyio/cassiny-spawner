@@ -42,6 +42,7 @@ class Config():
     DB_PASSWORD = os.getenv("DB_PASSWORD", "mysecretpassword")
     DB_NAME = os.getenv("DB_NAME", "cassiny")
     DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
+    DB_PORT = os.getenv("DB_PORT", 5432)
 
     # APPS #
     # public url to access apps
