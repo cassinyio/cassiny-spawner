@@ -31,11 +31,13 @@ jobs:
         - pip install tox codecov
         - docker run -d --name streams -p 4222:4222 nats-streaming:0.6.0
         - docker run -d --name postgres -e POSTGRES_DB=$POSTGRES_DB -e POSTGRES_USER=$POSTGRES_USER -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD -p $DB_PORT:5432 postgres:10.0
+        - docker swarm init
       script:
         - tox
       after_success:
         - docker rm -f streams
         - docker rm -f postgres
+        - docker swarm leave -f
         - codecov
     - stage: deploy
       script:
