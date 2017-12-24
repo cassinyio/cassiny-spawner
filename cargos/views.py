@@ -7,17 +7,23 @@ All rights reserved.
 
 
 import logging
-from typing import Mapping, Union
-from uuid import uuid4
+from secrets import token_urlsafe
+from typing import Any, Mapping
 
 from aiohttp.web import json_response
 from rampante import streaming
-from sqlalchemy.sql import select
+from sqlalchemy.exc import InterfaceError, InternalError
+from sqlalchemy.sql import select, update
 
-from cargos import serializers
 from cargos.models import mCargo
-from probes.models import mProbe
-from utils import WebView, check_quota, verify_token
+from cargos.serializers import CargoSchema
+from spawner import Spawner
+from utils import (
+    WebView,
+    check_quota,
+    naminator,
+    verify_token,
+)
 
 log = logging.getLogger(__name__)
 
@@ -26,40 +32,37 @@ class Cargo(WebView):
     """API endpoint to create, delete and modify cargos."""
 
     @verify_token
-    async def get(self, payload: Mapping[str, Union[str, int]]):
+    async def get(self, payload: Mapping[str, Any]):
         """Get a serialized version of the cargo object."""
         user_id = payload['user_id']
-        attached_cargos: set = set()
+        cargo_id = self.request.match_info.get("cargo_id")
 
-        async with self.db.acquire() as conn:
-            query = select([
-                mCargo,
-                mProbe.c.id.label("probe_id"),
-            ])\
+        if cargo_id:
+            query = select([mCargo])\
                 .where(
-                mCargo.c.user_id == user_id,
-            )\
-                .select_from(
-                mCargo
-                .outerjoin(mProbe, mProbe.c.cargo_id == mCargo.c.id)
+                    (mCargo.c.user_id == user_id) &
+                    (mCargo.c.id == cargo_id)
             )
-            result = await conn.execute(query)
-            cargos = await result.fetchall()
+            probe = await self.query_db(query)
+            log.error(probe)
+            probe_schema = CargoSchema()
+            probe_schema.context = {"user": user_id}
+            data, _ = probe_schema.dump(probe)
 
-        # used_space = await get_space(host, cargo.id)
-        # if not used_space:
-        #    message = f"Something went bad while getting info about {cargo.name} :("
-        #    body = {"message": message}
-        #    return json_response(body, status=400)
+            return json_response({"cargo": data})
 
-        cargos_schema = serializers.CargoSchema(
+        query = select([mCargo])\
+            .where(
+            mCargo.c.user_id == user_id,
+        )
+        cargos = await self.query_db(query, many=True)
+        cargos_schema = CargoSchema(
             only=(
                 "id", "name", "access_key",
                 "secret_key", "size", "created_at",
                 "user_id", 'probe_id'),
             many=True)
-        cargos_schema.context = {"user": user_id,
-                                 "attached_cargos": attached_cargos}
+        cargos_schema.context = {"user": user_id}
 
         data, errors = cargos_schema.dump(cargos)
 
@@ -70,63 +73,95 @@ class Cargo(WebView):
 
     @verify_token
     @check_quota(mCargo)
-    async def post(self, payload: Mapping[str, Union[str, int]]):
-        """Create cargos."""
+    async def post(self, payload: Mapping[str, Any]):
+        """Create a new cargo."""
         user_id = payload['user_id']
         data = await self.request.json()
-        log.debug(f"data inside post request: {data}")
 
-        schema = serializers.CargoSchema().load(data)
+        data, errors = CargoSchema().load(data)
+        if errors:
+            log.info(errors)
+            return json_response({"message": errors}, status=400)
 
-        if schema.errors:
-            log.warning(
-                f"Error while serializing: {schema.errors} from {data}")
-            message = "A field is missing :/"
-            body = {"message": message}
-            return json_response(body, status=400)
+        access_key = token_urlsafe(15).upper()
+        secret_key = token_urlsafe(30)
 
-        # create event
-        event = {
-            "token": payload['token'],
-            "user_id": user_id,
-            "event_uuid": uuid4().hex,
-            "description": schema.data["description"],
-            "size": schema.data["size"],
+        specs = {
+            "access_key": access_key,
+            "secret_key": secret_key,
+            "description": data['description'],
+            "size": data.get("size", 10),
+            "cpu": 1,
+            "ram": 0.5,
         }
 
-        await streaming.publish("service.cargo.create", event)
+        name = naminator("cargo")
 
-        message = "We are creating your cargo......."
+        try:
+            query = mCargo.insert().values(
+                user_id=user_id,
+                name=name,
+                specs=specs,
+            )
+            await self.query_db(query, get_result=False)
+        except InterfaceError:
+            return json_response({"error": errors}, status=400)
+
+        service = await Spawner.cargo.create(
+            name=name,
+            user_id=user_id,
+            specs=specs,
+            access_key=access_key,
+            secret_key=secret_key,
+        )
+
+        if not service:
+            try:
+                query = update(mCargo).where(
+                    mCargo.c.name == name).values(status=3)
+                await self.query_db(query, get_result=False)
+            except InternalError:
+                log.exception(f"Error while saving status for {name}.")
+            finally:
+                message = f"There's been an error while creating {name}."
+                return json_response({"error": message}, status=400)
+
+        message = f"we are creating {name}."
         return json_response({"message": message})
 
     @verify_token
-    async def delete(self, payload: Mapping[str, Union[str, int]]):
-        """DELETE view to delete cargo objects."""
+    async def delete(self, payload: Mapping[str, Any]):
+        """Delete a cargo."""
         user_id = payload["user_id"]
         cargo_id = self.request.match_info.get("cargo_id")
 
-        async with self.db.acquire() as conn:
-            query = mCargo.delete().where(
+        try:
+            query = mCargo.delete()\
+                .where(
                 (mCargo.c.user_id == user_id) &
-                (mCargo.c.id == cargo_id)
-            ).\
-                returning(
-                mCargo.c.name,
-                mCargo.c.size,
-                mCargo.c.spacedock_id
+                (mCargo.c.id == int(cargo_id))
             )
-            result = await conn.execute(query)
+        except ValueError:
+            query = mCargo.delete()\
+                .where(
+                (mCargo.c.user_id == user_id) &
+                (mCargo.c.name == cargo_id)
+            )
+
+        async with self.db.acquire() as conn:
+            result = await conn.execute(query.returning(mCargo.c.name))
             deleted_cargo = await result.fetchone()
 
-        if deleted_cargo is not None:
+        if deleted_cargo is None:
+            log.error(f"Cargo doesn't exist inside the database: {cargo_id}")
+            user_message = f"It seems that cargo doesn't exist anymore."
+            return json_response({"message": user_message}, status=400)
 
-            user_message = f"We are removing {deleted_cargo.name}"
-            body = {"message": user_message}
-            return json_response(body)
-
-        message = ("User has tried to remove a cargo that "
-                   f"doesn't exist inside the database: {cargo_id}")
-        log.error(message)
-        user_message = f"It seems that cargo doesn't exist anymore"
-        body = {"message": user_message}
-        return json_response(body)
+        result = await Spawner.cargo.delete(name=deleted_cargo.name)
+        event = {
+            "user_id": user_id,
+            "name": deleted_cargo.name,
+        }
+        await streaming.publish("service.cargo.deleted", event)
+        user_message = f"We are removing {deleted_cargo.name}"
+        return json_response({"message": user_message})

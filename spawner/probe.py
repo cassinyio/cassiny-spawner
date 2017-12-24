@@ -1,59 +1,85 @@
 """
-Probe controller.
+Probes controller.
 
+:copyright: (c) 2017, Cassiny.io OÜ.
+All rights reserved.
 """
 
 
 import logging
-from typing import Dict
+from typing import Any, Dict
+from urllib.parse import urlparse
 
 from config import Config as C
+from spawner.base_service import BaseService
 
 log = logging.getLogger(__name__)
 
 
-class Probe():
-    """A container for a probe"""
-
-    def __init__(self, spawner):
-        self._spawner = spawner
+class Probe(BaseService):
+    """Probe spawner."""
 
     async def create(
-            self, name: str, user_id: int,
-            specs: Dict) -> bool:
+        self,
+        *,
+        name: str,
+        user_id: int,
+        specs: Dict,
+        token: str,
+    ) -> bool:
         """
         Create a new probe as a Docker service.
-        Also add a route to Redis.
 
-        specs: specs about how to build the Docker service.
+        Parameters
+        -----------
+        name
+            unique name for the probe.
+        user_id
+            user id.
+        specs
+            specs about how to build the Docker service.
+
         """
+        env = self.get_env(name=name, token=token)
 
-        env = self.get_env(name)
+        specs.update({
+            "service_type": "probe",
+            "networks": ["cassiny-public"],
+        })
 
-        try:
-            await self._spawner.create(name=name, user_id=user_id, specs=specs, env=env)
-            return True
-        except Exception:
-            log.exception("Errow while creating probe.")
-            return False
-
-    async def remove(self, name: str):
-        """
-        Delete a probe.
-        Remove both docker service, redis and route inside the db.
-        """
-        response = await self._spawner.remove(name=name)
-        return response
-
-    @staticmethod
-    def get_env(name: str) -> Dict[str, str]:
-        env = {
-            "JPY_USER": "user",
-            "COOKIE_USER_SESSION": C.PROBE_SESSION,
-            "PROBE_BASE_URL": C.PROBE_DEFAULT_URL,
-            "MCC_PUBLIC_URL": C.MCC_PUBLIC_URL,
-            "MCC_INTERNAL_URL": C.MCC_INTERNAL_URL,
-            "PROBE_NAME": name
+        # service labels
+        service_labels = {
+            "traefik.port": f'{env["PROBE_PORT"]}',
+            "traefik.enable": "true",
+            "traefik.frontend.rule": C.TRAEFIK_RULE.format(name),
+            "traefik.docker.network": specs["networks"][-1],
         }
 
+        service = await self._spawner.create(
+            name=name, user_id=user_id, specs=specs, env=env, service_labels=service_labels
+        )
+        return service
+
+    @staticmethod
+    def get_env(name: str, token: str) -> Dict[str, Any]:
+        """
+        Return a dict of env vars.
+
+        Parameters
+        -----------
+        name
+            name for the service.
+        token
+            token to secure jupyter access.
+            http://jupyter-notebook.readthedocs.io/en/stable/security.html
+
+        """
+        url = urlparse(C.PROBE_DEFAULT_URL)
+        env = {
+            "JPY_USER": "user",
+            "PROBE_IP": url.hostname,
+            "PROBE_PORT": url.port,
+            "PROBE_NAME": name,
+            "PROBE_TOKEN": token,
+        }
         return env

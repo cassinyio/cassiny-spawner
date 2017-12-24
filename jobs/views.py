@@ -6,16 +6,24 @@ All rights reserved.
 """
 
 import logging
+from typing import Any, Mapping
 
 from aiohttp.web import json_response
 from rampante import streaming
-from sqlalchemy.sql import select
+from sqlalchemy.exc import InterfaceError, InternalError
+from sqlalchemy.sql import select, update
 
 from blueprints.models import mBlueprint
-from cargos.models import mCargo
+from config import Config as C
 from jobs.models import mJob
 from jobs.serializers import JobSchema
-from utils import WebView, check_quota, verify_token
+from spawner import Spawner
+from utils import (
+    WebView,
+    check_quota,
+    naminator,
+    verify_token,
+)
 
 log = logging.getLogger(__name__)
 
@@ -24,21 +32,19 @@ class Jobs(WebView):
     """List, get and create Jobs."""
 
     @verify_token
-    async def get(self, payload):
+    async def get(self, payload: Mapping[str, Any]):
         """Get a list of Jobs for the current user"""
         user_id = payload["user_id"]
 
         async with self.db.acquire() as conn:
             query = select([
                 mJob,
-                mCargo.c.name.label("cargo_name"),
                 mBlueprint.c.name.label("blueprint_name"),
                 mBlueprint.c.repository.label("blueprint_repository"),
             ])\
                 .where(mJob.c.user_id == user_id)\
                 .select_from(
                     mJob
-                    .outerjoin(mCargo, mJob.c.cargo_id == mCargo.c.id)
                     .outerjoin(mBlueprint, mJob.c.blueprint_id == mBlueprint.c.id)
             )
 
@@ -50,74 +56,113 @@ class Jobs(WebView):
         data, errors = job_schema.dump(jobs)
 
         if errors:
-            log.warning(
-                f"Error while handling request from user {user_id} request: {errors}")
-            return json_response(errors, status=400)
+            return json_response({"error": errors}, status=400)
 
         body = {"jobs": data}
         return json_response(body)
 
     @verify_token
     @check_quota(mJob)
-    async def post(self, payload):
+    async def post(self, payload: Mapping[str, Any]):
         """Create a new job."""
         user_id = payload["user_id"]
         data = await self.request.json()
 
         data, errors = JobSchema().load(data)
-
         if errors:
-            log.warning(
-                f"Error while handling request from user {user_id}: {errors}")
-            body = {"message": errors}
-            return json_response(body, status=400)
+            return json_response({"error": errors}, status=400)
 
-        # Create the new jobs
-        event = {
-            "user_id": user_id,
-            "specs": data
+        query = mBlueprint.select().where(
+            (mBlueprint.c.id == data['blueprint_id']) &
+            (
+                (mBlueprint.c.user_id == user_id) |
+                (mBlueprint.c.public.is_(True))
+            )
+        )
+        blueprint = await self.query_db(query)
+
+        if blueprint is None:
+            error = "Did you select the right blueprint?"
+            return json_response({"error": error}, status=400)
+
+        cpu, ram, gpu = C.SIZE[data['machine_type']]
+
+        specs = {
+            'repository': blueprint.repository,
+            'blueprint': f"{blueprint.name}:{blueprint.tag}",
+            'machine_type': data['machine_type'],
+            'cpu': cpu,
+            'ram': ram,
+            'gpu': gpu
         }
 
-        await streaming.publish("service.probe.create", event)
+        name = naminator("job")
 
-        message = "We are creating your job......."
+        try:
+            query = mJob.insert().values(
+                user_id=user_id,
+                blueprint_id=blueprint.id,
+                name=name,
+                description=data['description'],
+                specs=specs,
+            )
+            await self.query_db(query, get_result=False)
+        except InterfaceError:
+            return json_response({"error": errors}, status=400)
+
+        service = await Spawner.job.create(
+            name=name,
+            user_id=user_id,
+            specs=specs,
+        )
+
+        if not service:
+            try:
+                query = update(mJob).where(
+                    mJob.c.name == name).values(status=3)
+                await self.query_db(query, get_result=False)
+            except InternalError:
+                log.exception(f"Error while saving status for {name}.")
+            finally:
+                message = f"There's been an error while creating {name}."
+                return json_response({"error": message}, status=400)
+
+        message = f"we are creating {name}."
         return json_response({"message": message})
 
     @verify_token
-    async def delete(self, payload):
-        """Delete Job endpoint given and id."""
+    async def delete(self, payload: Mapping[str, Any]):
+        """Delete a job."""
         user_id = payload["user_id"]
-        # get the job_id from the url path
         job_id = self.request.match_info.get("job_id")
 
-        log.info(f"Request to delete Job '{job_id}' from user '{user_id}'")
+        try:
+            query = mJob.delete()\
+                .where(
+                (mJob.c.user_id == user_id) &
+                (mJob.c.id == int(job_id))
+            )
+        except ValueError:
+            query = mJob.delete()\
+                .where(
+                (mJob.c.user_id == user_id) &
+                (mJob.c.name == job_id)
+            )
 
         async with self.db.acquire() as conn:
-            query = mJob.delete().where(
-                (mJob.c.user_id == user_id) &
-                (mJob.c.id == job_id)
-            ).returning(
-                mJob.c.name
-            )
-            result = await conn.execute(query)
-            # returns None if job_id doesn't exist
+            result = await conn.execute(query.returning(mJob.c.name))
             deleted_job = await result.fetchone()
 
-        # Delete the job
-        if deleted_job is not None:
-            event = {
-                "user_id": user_id,
-                "name": deleted_job.name,
-            }
+        if deleted_job is None:
+            log.error(f"Job doesn't exist inside the database: {job_id}")
+            user_message = f"It seems that job doesn't exist anymore"
+            return json_response({"message": user_message}, status=400)
 
-            await streaming.publish("service.probe.delete", event)
-
-            user_message = f"We are removing {deleted_job.name}"
-            body = {"message": user_message}
-            return json_response(body)
-
-        message = f"User has tried to remove a job that doesn't exist inside the database: {job_id}"
-        log.error(message)
-        user_message = f"It seems that job doesn't exist anymore"
-        body = {"message": user_message}
-        return json_response(body)
+        result = await Spawner.job.delete(name=deleted_job.name)
+        event = {
+            "user_id": user_id,
+            "name": deleted_job.name,
+        }
+        await streaming.publish("service.probe.deleted", event)
+        user_message = f"We are removing {deleted_job.name}"
+        return json_response({"message": user_message})

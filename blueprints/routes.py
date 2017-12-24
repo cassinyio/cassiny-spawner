@@ -8,5 +8,6 @@ All rights reserved.
 from blueprints.views import Blueprint
 
 routes = (
-    ('GET', '/spawner/blueprints', Blueprint),
+    ('*', '/spawner/blueprints', Blueprint),
+    ('POST', '/spawner/blueprints/{cargo_id}', Blueprint),
 )

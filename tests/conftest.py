@@ -27,8 +27,9 @@ from app import (
 from blueprints import routes as blueprint_routes
 from blueprints import mBlueprint
 from cargos import routes as cargo_routes
-from cargos import mCargo, mSpaceDock, mUser_cargos
-from config import TestingConfig as C
+from cargos import mCargo, mUser_cargos
+from config import Config as C
+from events import mLog
 from jobs import routes as job_routes
 from jobs import mJob
 from probes import routes as probe_routes
@@ -48,9 +49,13 @@ def create_tables():
     engine = create_engine(DB_URI)
 
     conn = engine.connect()
-    models = [mBlueprint, mSpaceDock, mCargo, mApi, mProbe, mUser_probes, mJob, mUser_cargos]
+    models = [mBlueprint, mCargo, mApi, mProbe,
+              mUser_probes, mJob, mUser_cargos, mLog]
     for model in models:
         conn.execute(CreateTable(model).compile(engine).__str__())
+    add_blueprint = """INSERT INTO "public"."blueprints"("id","repository","name","tag","dockerfile","link","description","public","created_at","user_id")
+    VALUES(1,'cassinyio','notebook','02946e48',NULL,NULL,NULL,TRUE,E'2017-12-16 22:46:13.515348+00',NULL);"""
+    conn.execute(add_blueprint)
 
 
 @pytest.fixture(scope="session")

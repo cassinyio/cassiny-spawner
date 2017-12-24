@@ -12,7 +12,7 @@ from typing import Any, Callable, Mapping
 
 from aiohttp import ClientSession, web
 from aiohttp.abc import AbstractView
-from sqlalchemy import Table, func, select
+from sqlalchemy import Table, select
 
 from config import Config as C
 
@@ -41,7 +41,7 @@ def check_quota(model: Table) -> Callable:
         async def decorator(*args, payload, **kwargs) -> Callable:
             # if quota IS NOT active we return the decorated function directly
             if C.QUOTA_IS_ACTIVE is False:
-                response = await func(*args, payload=payload, **kwargs)
+                response = await function(*args, payload=payload, **kwargs)
                 return response
 
             # Supports class based views see web.View
@@ -62,9 +62,13 @@ def check_quota(model: Table) -> Callable:
                     )
                     result = await conn.execute(query)
 
+                # if under the user can create the new service
                 if result.rowcount < limit:
                     response = await function(*args, payload=payload, **kwargs)
                     return response
+                else:
+                    body = {"error": "You have reached the maximum quota for your services."}
+                    return web.json_response(body, status=401)
             return web.json_response(data, status=401)
         return decorator
     return wrapper

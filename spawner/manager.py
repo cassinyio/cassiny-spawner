@@ -14,24 +14,24 @@ from aiodocker.docker import Docker
 from aiodocker.exceptions import DockerError
 
 from spawner.api import Api
+from spawner.blueprint import Blueprint
 from spawner.cargo import Cargo
 from spawner.job import Job
 from spawner.probe import Probe
-from utils import MakeTarFromFo
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("service.manager")
 
 
 class ServiceManager:
     """ServiceManager class."""
     _docker = None
 
-    def __init__(self):
-
+    def __init__(self) -> None:
         self.api = Api(self)
         self.cargo = Cargo(self)
         self.job = Job(self)
         self.probe = Probe(self)
+        self.blueprint = Blueprint(self)
 
     @property
     def docker(self):
@@ -53,12 +53,19 @@ class ServiceManager:
 
         return service
 
-    async def create(self, *, name=None, user_id, specs, env):
-        """Create a new service."""
+    async def create(
+        self,
+        *,
+        name=None,
+        service_labels: Dict=None,
+        user_id: int,
+        specs: Dict,
+        env: Dict
+    ) -> bool:
+        """Create new services."""
         networks, task_template = self.create_template(user_id, specs)
 
         # pass envs to the service
-
         if env is not None:
             task_template['ContainerSpec']['Env'] = env
 
@@ -67,29 +74,22 @@ class ServiceManager:
             "task_template": task_template,
         }
 
+        if service_labels is not None:
+            params['labels'] = service_labels
+
         if name is not None:
             params['name'] = name
 
         log.info(f"task_template: {task_template}")
 
-        service = None
-        if name:
-            service = await self.get_service(name=name)
-
-        if service is None:
-            resp = await self.docker.services.create(**params)
-            service_id = resp['ID']
-
-            log.info(
-                f"Created Docker service {service_id} "
-                f"from image {task_template['ContainerSpec']['Image']}"
-            )
-
+        try:
+            await self.docker.services.create(**params)
+        except DockerError as err:
+            log.exception(f"Error while creating service {name}")
+            return False
         else:
-            log.info(
-                "Found existing Docker service {name} (id: {service_id[:7]})")
-
-        return service_id[:10]
+            log.info(f"Created service {name}")
+            return True
 
     @staticmethod
     def get_image(specs: Dict) -> str:
@@ -98,7 +98,7 @@ class ServiceManager:
         repository = specs.get('repository', None)
         blueprint = specs.get('blueprint', None)
         if repository is None:
-            return f"{blueprint}"
+            return blueprint
         return f"{repository}/{blueprint}"
 
     def create_template(self, user_id: int, specs: Dict) -> Tuple[List, Dict]:
@@ -117,8 +117,9 @@ class ServiceManager:
             networks = specs['networks']
 
         # Pass the user_id to the service, the key has to be a string!
-        # log_uuid is used to define a unique service among many events
-        container_spec['Labels'] = {
+        # log_uuid is used to define this service as unique
+        # container_spec are != from service spec
+        container_spec["Labels"] = {
             "user_id": str(user_id),
             "log_uuid": uuid4().hex,
         }
@@ -151,7 +152,7 @@ class ServiceManager:
         # add placement conditions
         placement = specs.get('placement', [])
 
-        if "gpu" in specs:
+        if specs.get('gpu', False):
             placement.append("node.labels.gpu == true")
 
         TaskTemplate['Placement'] = {'Constraints': placement}
@@ -173,6 +174,8 @@ class ServiceManager:
         }
 
         # set fluentd as a logger
+        # disabled for now
+        '''
         TaskTemplate['LogDriver'] = {
             "Name": "fluentd",
             "Options": {
@@ -180,95 +183,46 @@ class ServiceManager:
                 "labels": "com.docker.swarm.service.name,user_id,log_uuid"
             }
         }
+        '''
 
         TaskTemplate['ContainerSpec'] = container_spec
         TaskTemplate['Resources'] = resources
 
         return networks, TaskTemplate
 
-    async def build_and_push_from_fo(self, file_object, tag, blueprint):
-        """Build and image from a file-like-object."""
-        stream = await self.docker.build(fileobj=file_object, tag=tag)
-        async for output in stream:
-            try:
-                print(output['stream'].strip())
-            # stream is not available when you download images
-            except KeyError:
-                pass
-        await self.docker.push(tag)
-
-    async def build_and_push_from_s3(self, s3_key, s3_skey, cargo, image, tag, bucket='default'):
-        """Build and image from s3."""
-        async with MakeTarFromFo(
-            cargo=cargo,
-            bucket=bucket,
-            s3_key=s3_key,
-            s3_skey=s3_skey,
-            image=image
-        ) as tar_file:
-
-            stream = await self.docker.docker.images.build(
-                fileobj=tar_file,
-                nocache=True,
-                encoding="gzip",
-                tag=tag,
-                stream=True
-            )
-
-            async for output in stream:
-                try:
-                    print(output['stream'].strip())
-                # stream is not available when you download images
-                except KeyError:
-                    pass
-
-        stream = await self.docker.push(tag)
-        async for output in stream:
-            print(output)
-
-    async def remove(self, name: str = None, uuid: str = None):
+    async def remove(self, name: str = None, uuid: str = None) -> bool:
         """Remove a service from Docker."""
         if name is None:
             name = uuid
 
         if name is None:
             raise KeyError(
-                "You need to specify a uuid or a name to remove a service")
+                "You need to specify a uuid or a name to remove a service.")
 
-        log.info(f"Stopping and removing docker service {name}")
-        resp = None
+        log.info(f"Stopping and removing service {name}")
 
         try:
             resp = await self.docker.services.delete(name)
-            log.info(f"Docker service {name} removed")
+            log.info(f"Service {name} removed.")
         except DockerError:
-            log.exception(f"Docker service {name} doesn't exist")
+            log.exception(f"Service {name} doesn't exist.")
+            resp = False
 
         return resp
 
-    async def build(self, tag: str, fileobj):
-        """
-        Logs from the service
-        Consider using stop/start when Docker adds support
-        """
+    async def build(self, name: str, fileobj):
+        """Build blueprints."""
+        log.info(f"Building image {name}.")
+        building_image = await self.docker.images.build(
+            fileobj=fileobj,
+            nocache=True,
+            encoding="gzip",
+            tag=name
+        )
+        return building_image
 
-        log.info(f"Building image of {tag}")
-
-        try:
-            image = await self.docker.images.build(
-                fileobj=fileobj,
-                encoding="gzip",
-                tag=tag,
-                stream=True)
-        except DockerError:
-            log.exception(f"Error while building {tag}")
-        else:
-            return image
-
-    async def push(self, name):
-        try:
-            image = await self.docker.images.push(name=name, stream=True)
-        except DockerError:
-            log.exception(f"Error while pushing {name}")
-        else:
-            return image
+    async def push(self, name, auth):
+        """Push a image to a registry."""
+        log.info(f"Pushing image {name}")
+        pushing_image = await self.docker.images.push(name=name, auth=auth)
+        return pushing_image

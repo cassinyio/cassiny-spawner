@@ -19,23 +19,18 @@ from sqlalchemy.sql import func
 
 from factory import metadata
 
-mJob = Table('jobs', metadata,
-             Column('id', Integer, primary_key=True),
-
-             # name and subdomain of the service
-             Column('name', String(100), unique=True),
-
-             Column('created_at', DateTime(timezone=True),
-                    server_default=func.now()),
-             Column('specs', JSON),
-             Column('description', Unicode(255)),
-
-             # command that will run
-             Column('command', Unicode(255)),
-             # Creator of the Container
-             Column('user_id', Integer, nullable=False),
-             Column('blueprint_id', Integer,
-                    ForeignKey("blueprints.id"), nullable=False),
-             Column('cargo_id', Integer,
-                    ForeignKey("cargos.id"), nullable=True),
-             )
+mJob = Table(
+    'jobs', metadata,
+    Column('id', Integer, primary_key=True),
+    Column('name', String(100), unique=True),
+    Column('created_at', DateTime(timezone=True),
+           server_default=func.now()),
+    Column('specs', JSON),
+    Column('description', Unicode(255)),
+    # command that will run
+    Column('command', Unicode(255)),
+    # Creator of the Container
+    Column('user_id', Integer, nullable=False),
+    Column('blueprint_id', Integer,
+           ForeignKey("blueprints.id"), nullable=False),
+)

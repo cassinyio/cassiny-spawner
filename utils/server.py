@@ -19,14 +19,12 @@ class WebView (web.View):
 
     @property
     def config(self):
+        """Return config object."""
         return Config
 
     @property
-    def redis(self):
-        return self.request.app["redis"]
-
-    @property
     def db(self):
+        """DB pool object."""
         return self.request.app["db"]
 
     async def query_db(self, query, many=False, get_result=True):

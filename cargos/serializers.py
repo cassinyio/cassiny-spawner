@@ -13,7 +13,6 @@ class CargoSchema(Schema):
     """Serializer for Cargos model."""
 
     # required fields
-    blueprint_id = fields.Int(required=True)
     description = fields.Str(required=True, allow_none=False)
     size = fields.Int(required=True)
 
@@ -30,14 +29,8 @@ class CargoSchema(Schema):
     @post_dump
     def owner(self, data):
         if 'user' in self.context:
-            if data['user_id'] == self.context['user']:
+            if "user_id" in data and data['user_id'] == self.context['user']:
                 data['owner'] = "You"
-
-    @post_dump
-    def attached(self, data):
-        data['attached'] = False
-        if data['probe_id']:
-            data['attached'] = True
 
 
 class CargoForProbeSchema(Schema):

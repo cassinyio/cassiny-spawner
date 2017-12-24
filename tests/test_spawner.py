@@ -55,6 +55,7 @@ async def create_remove_api(loop):
 
 async def test_create_remove_probe(loop):
     name = naminator("probe")
+    token = token_urlsafe(30)
     specs = {
         "repository": "cassinyio",
         "blueprint": "notebook:4018e4ee",
@@ -67,6 +68,7 @@ async def test_create_remove_probe(loop):
         name=name,
         user_id=1,
         specs=specs,
+        token=token
     )
     service = await Spawner.get_service(name=name)
     assert service is not None

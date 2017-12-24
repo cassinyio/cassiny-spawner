@@ -8,7 +8,7 @@ All rights reserved.
 import functools
 import logging
 from types import MappingProxyType
-from typing import Mapping, Optional
+from typing import Any, Mapping, Optional
 
 import jwt
 from aiohttp import web
@@ -23,13 +23,13 @@ from config import Config as C
 log = logging.getLogger(__name__)
 
 
-def _validate_token(headers: Mapping, key: str=C.PUBLIC_KEY) -> Optional[Mapping[str, str]]:
+def _validate_token(headers: Mapping, key: bytes=C.PUBLIC_KEY) -> Optional[Mapping[str, Any]]:
     """Validate the token inside the headers.
 
     Return the payload if correct, None in the other cases.
     The payload contains the token.
     """
-    payload: Mapping[str, str] = None
+    payload: Mapping[str, Any] = None
     if "Authorization" in headers:
         try:
             encoded: str = headers['Authorization'].split('Bearer ')[1]
@@ -55,8 +55,8 @@ def verify_token(func):
         payload = _validate_token(request.headers)
 
         if payload is None:
-            message = "Your JWT is not valid."
-            return web.json_response({"message": message}, status=401)
+            message = "Your token is not valid."
+            return web.json_response({"error": message}, status=401)
         else:
             payload = MappingProxyType(payload)
             response = await func(*args, payload=payload, **kwargs)

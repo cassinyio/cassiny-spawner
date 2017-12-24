@@ -6,18 +6,18 @@ All rights reserved.
 """
 
 from marshmallow import Schema, fields, post_dump
+from marshmallow.validate import OneOf
 
 from config import Config as C
 
 
 class APIs(Schema):
-    """Serializer for API model."""
+    """Serializer for APIs model."""
 
     # required fields
-    blueprint_id = fields.Int(required=True)
-    machine_type = fields.Int(required=True)
     description = fields.Str(required=True, allow_none=False)
-    cargo_id = fields.Int(required=True)
+    blueprint_id = fields.Int(required=True)
+    machine_type = fields.Str(required=True, validate=OneOf(C.SIZE))
 
     # not-required fields
     created_at = fields.DateTime(format="%Y-%m-%d %H:%M:%S")

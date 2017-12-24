@@ -17,22 +17,15 @@ class Config():
     DEBUG = False
     TESTING = False
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    TEMP_BUILD_FOLDER = os.path.join(BASE_DIR, "temp")
 
     # PUBLIC KEY
     try:
-        with open("/keys/public_key.pub", mode="r", encoding="utf-8") as f:
+        with open("./keys/public_key.pub", mode="rb") as f:
             PUBLIC_KEY = f.read()
     except FileNotFoundError:
-        PUBLIC_KEY = ""
         log.error("PRIVATE KEY not found.")
-
-    # MCC
-    # to locally run the server
-    MCC_PUBLIC_URL = os.getenv("MCC_PUBLIC_URL", "https://mcc.cassiny.io")
-
-    # internal url
-    MCC_INTERNAL_URL = os.getenv(
-        "MCC_INTERNAL_URL", "http://cassiny-auth")
+        raise
 
     # STREAM
     STREAM_URI = os.getenv("STREAM_URI", "nats://127.0.0.1:4222")
@@ -44,22 +37,38 @@ class Config():
     DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
     DB_PORT = os.getenv("DB_PORT", 5432)
 
+    # Service size
+    SIZE = {
+        # (cpu, ram, gpu)
+        "mega": (1, 15, False),
+        "exa": (2, 30, False),
+        "yotta": (4, 60, False),
+        "tera+gpu": (4, 15, True),
+    }
+
+    # Service status
+    STATUS = {
+        0: "creating",
+        1: "running",
+        2: "completed",
+        3: "error",
+        4: "stopped",
+    }
+
     # APPS #
     # public url to access apps
     APPS_PUBLIC_URL = "https://{subdomain}.cssny.space"
 
-    # ip and port used by the jupyter notebook to run
+    # TRAEFIK host rule
+    TRAEFIK_RULE = "Host:{}.cssny.space"
+
+    # ip and port used by services
     PROBE_DEFAULT_URL = "http://0.0.0.0:8888"
-    PROBE_SESSION = "PROBE_USER_SESSION"
-
-    # ip and port used to run api
     API_DEFAULT_URL = "http://0.0.0.0:8080"
-
-    # ip and port used to run cargo
     CARGO_DEFAULT_URL = "http://0.0.0.0:9000"
 
     # QUOTA SERVICE
-    QUOTA_IS_ACTIVE = True
+    QUOTA_IS_ACTIVE = False
     QUOTA_URI = 'http://cassiny-billing:8080/billing/quota'
 
     # LOGGING CONFIGURATION

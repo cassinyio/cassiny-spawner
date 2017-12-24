@@ -1,78 +1,62 @@
-"""API controller."""
+"""API spawner."""
 
 
 import logging
 from typing import Dict
-from uuid import uuid4
+from urllib.parse import urlparse
+
+from config import Config as C
+from spawner.base_service import BaseService
 
 log = logging.getLogger(__name__)
 
 
-class Api():
-    """A container for a API."""
-
-    def __init__(self, spawner):
-        self._spawner = spawner
+class Api(BaseService):
+    """APIs services controller."""
 
     async def create(
-            self, name: str, user_id: int,
-            specs: Dict, cargo, s3_key: str, s3_skey: str):
+        self,
+        name: str,
+        user_id: int,
+        specs: Dict,
+    ) -> bool:
         """
         Create a new API as a Docker service.
-        Also add a route to Redis.
 
         specs: specs about how to build the Docker service.
         """
-        image = self._spawner.get_image(specs)
-
-        # we build an image for the user
-        registry_ = 'registry.cassiny.io'
-        repo_ = "username"
-        image_ = "image_name"
-        tag_ = uuid4().hex[:10]
-        tag = f"{registry_}/{repo_}/{image_}:{tag_}"
-
-        await self._spawner.build_and_push_from_s3(
-            cargo=cargo,
-            s3_key=s3_key,
-            s3_skey=s3_skey,
-            image=image,
-            tag=tag
-        )
-
-        # we launch the specific image
-        specs['repository'], specs['blueprint'] = (
-            f"{registry_}", f"{repo_}/{image_}:{tag_}")
-
         env = self.get_env(name)
+        specs['service_type'] = "api"
 
-        try:
-            await self._spawner.create(name=name, user_id=user_id, specs=specs, env=env)
-            return True
-        except Exception:
-            log.exception("Errow while creating probe.")
-            return False
+        url = urlparse(C.API_DEFAULT_URL)
 
-    def add_mounts(self):
+        # service labels
+        service_labels = {
+            "traefik.port": f"{url.port}",
+            "traefik.enable": "true",
+            "traefik.frontend.rule": C.TRAEFIK_RULE.format(name),
+            "traefik.docker.network": specs["networks"][-1],
+        }
 
-        mounts = [{'type': 'volume',
-                   'source': 'volume1',
-                   'target': '/home/user/work', }]
-
-        return mounts
-
-    async def remove(self, name: str):
-        """
-        Delete an API.
-        Remove both docker service, redis and route inside the db.
-        """
-        response = await self._spawner.remove(name=name)
-        return response
+        service = await self._spawner.create(
+            name=name, user_id=user_id,
+            specs=specs, env=env, service_labels=service_labels
+        )
+        return service
 
     @staticmethod
-    def get_env(name):
+    def get_env(name: str) -> Dict[str, str]:
+        """
+        Return a dict of env vars.
+
+        Parameters
+        -----------
+        name
+            name for the service.
+
+        """
         env = {
-            "API_ID": name
+            "API_NAME": name
         }
 
         return env

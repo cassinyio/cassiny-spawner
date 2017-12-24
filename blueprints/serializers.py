@@ -1,10 +1,8 @@
 """
-    serializers.py
-    ~~~~~~~~~
-    Blueprints Schema model
+Blueprints serializers.
 
-    :copyright: (c) 2017, Cassiny.io OÜ.
-    All rights reserved.
+:copyright: (c) 2017, Cassiny.io OÜ.
+All rights reserved.
 """
 
 
@@ -14,6 +12,13 @@ from marshmallow import Schema, fields
 class BlueprintForProbeSchema(Schema):
     value = fields.Int(attribute="id")
     text = fields.Str(attribute="name")
+
+
+class CreateBlueprint(Schema):
+    name = fields.Str()
+    base_image = fields.Str()
+    tag = fields.Str()
+    description = fields.Str()
 
 
 class BlueprintSchema(Schema):
