@@ -6,7 +6,6 @@ All rights reserved.
 """
 
 from sqlalchemy import (
-    JSON,
     Column,
     DateTime,
     ForeignKey,
@@ -15,6 +14,7 @@ from sqlalchemy import (
     Table,
     Unicode,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.sql import func
 
 from factory import metadata
@@ -25,11 +25,9 @@ mJob = Table(
     Column('name', String(100), unique=True),
     Column('created_at', DateTime(timezone=True),
            server_default=func.now()),
-    Column('specs', JSON),
+    Column('specs', JSONB),
     Column('description', Unicode(255)),
-    # command that will run
-    Column('command', Unicode(255)),
-    # Creator of the Container
+    Column('status', Integer, default=0),
     Column('user_id', Integer, nullable=False),
     Column('blueprint_id', Integer,
            ForeignKey("blueprints.id"), nullable=False),

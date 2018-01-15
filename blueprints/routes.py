@@ -9,5 +9,5 @@ from blueprints.views import Blueprint
 
 routes = (
     ('*', '/spawner/blueprints', Blueprint),
-    ('POST', '/spawner/blueprints/{cargo_id}', Blueprint),
+    ('POST', '/spawner/blueprints/cargo/{cargo_id}', Blueprint),
 )

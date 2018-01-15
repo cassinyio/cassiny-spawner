@@ -22,7 +22,7 @@ async def test_create_remove_job(loop):
     )
     service = await Spawner.get_service(name=name)
     assert service is not None
-    await Spawner.job.remove(name=name)
+    await Spawner.job.delete(name=name)
     service = await Spawner.get_service(name=name)
     assert service is None
 
@@ -48,7 +48,7 @@ async def create_remove_api(loop):
     )
     service = await Spawner.get_service(name=name)
     assert service is not None
-    await Spawner.api.remove(name=name)
+    await Spawner.api.delete(name=name)
     service = await Spawner.get_service(name=name)
     assert service is None
 
@@ -72,7 +72,7 @@ async def test_create_remove_probe(loop):
     )
     service = await Spawner.get_service(name=name)
     assert service is not None
-    await Spawner.probe.remove(name=name)
+    await Spawner.probe.delete(name=name)
     service = await Spawner.get_service(name=name)
     assert service is None
 
@@ -97,6 +97,6 @@ async def test_create_remove_cargo(loop):
     )
     service = await Spawner.get_service(name=name)
     assert service is not None
-    await Spawner.cargo.remove(name=name)
+    await Spawner.cargo.delete(name=name)
     service = await Spawner.get_service(name=name)
     assert service is None

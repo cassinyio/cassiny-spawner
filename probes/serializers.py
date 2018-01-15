@@ -17,21 +17,28 @@ class ProbeSchema(Schema):
 
     # required fields
     description = fields.Str(required=True, allow_none=False)
-    blueprint_id = fields.Int(required=True)
-    machine_type = fields.Str(required=True, validate=OneOf(C.SIZE))
+    blueprint = fields.Int(required=True)
+    machine_type = fields.Str(required=True, load_only=True, validate=OneOf(C.SIZE))
 
     # export only
     id = fields.Int(dump_only=True)
-    created_at = fields.DateTime(format="%Y-%m-%d")
+    name = fields.Str(dump_only=True)
+    token = fields.Str(dump_only=True)
+    created_at = fields.DateTime(dump_only=True, format="%Y-%m-%d")
     user_id = fields.Int(dump_only=True)
-    blueprint_name = fields.Int(dump_only=True)
+    blueprint_name = fields.Str(dump_only=True)
     blueprint_repository = fields.Str(dump_only=True)
     status = fields.Int(dump_only=True)
+    specs = fields.Raw()
 
     @post_dump
     def owner(self, data):
         if "user_id" in data and data['user_id'] == self.context['user']:
             data['owner'] = "You"
+
+    @post_dump
+    def translate_status(self, data):
+        data['status'] = C.STATUS[data['status']]
 
     @post_dump
     def create_blueprint_name(self, data):
@@ -42,5 +49,4 @@ class ProbeSchema(Schema):
 
     @post_dump
     def url(self, data):
-        if "url" in data:
-            data['url'] = C.APPS_PUBLIC_URL.format(subdomain=data['name'])
+        data['url'] = C.APPS_PUBLIC_URL.format(subdomain=data['name'])

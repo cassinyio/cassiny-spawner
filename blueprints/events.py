@@ -11,9 +11,9 @@ import logging
 from rampante import streaming, subscribe_on
 from sqlalchemy.exc import InterfaceError
 
-from blueprints import mBlueprint
 from blueprints.build_from_file import CreateFromFile
 from blueprints.build_from_s3 import CreateFromS3
+from blueprints.models import mBlueprint
 from spawner import Spawner
 
 log = logging.getLogger(__name__)
@@ -22,6 +22,7 @@ log = logging.getLogger(__name__)
 @subscribe_on("service.blueprint.create")
 async def create_blueprint(queue, event, app):
     """Task `probe.create` events."""
+    log.error("Event recevied")
     user_id = event["user_id"]
     user = event["email"].replace("@", "")
     blueprint = event["blueprint"]
@@ -54,11 +55,11 @@ async def create_blueprint(queue, event, app):
                 encoding="gzip",
                 name=image_name,
             )
-
-    auth = {"username": "barrachri", "password": "880824.Chrstnbrr"}
+    # fix this part
+    auth = {"username": "barrachri", "password": "empty"}
     await Spawner.blueprint.push(name=image_name, auth=auth)
 
-    # insert cargo into db
+    # insert blueprint into db
     try:
         query = mBlueprint.insert().values(
             repository=f"{registry}/{user}",

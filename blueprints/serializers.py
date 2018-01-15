@@ -16,8 +16,8 @@ class BlueprintForProbeSchema(Schema):
 
 class CreateBlueprint(Schema):
     name = fields.Str()
-    base_image = fields.Str()
     tag = fields.Str()
+    base_image = fields.Str()
     description = fields.Str()
 
 

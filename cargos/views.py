@@ -56,18 +56,10 @@ class Cargo(WebView):
             mCargo.c.user_id == user_id,
         )
         cargos = await self.query_db(query, many=True)
-        cargos_schema = CargoSchema(
-            only=(
-                "id", "name", "access_key",
-                "secret_key", "size", "created_at",
-                "user_id", 'probe_id'),
-            many=True)
+        cargos_schema = CargoSchema(many=True)
         cargos_schema.context = {"user": user_id}
 
-        data, errors = cargos_schema.dump(cargos)
-
-        if errors:
-            return json_response(errors, status=400)
+        data, _ = cargos_schema.dump(cargos)
 
         return json_response({"cargos": data})
 
@@ -153,9 +145,8 @@ class Cargo(WebView):
             deleted_cargo = await result.fetchone()
 
         if deleted_cargo is None:
-            log.error(f"Cargo doesn't exist inside the database: {cargo_id}")
-            user_message = f"It seems that cargo doesn't exist anymore."
-            return json_response({"message": user_message}, status=400)
+            error = "That cargo doesn't exist anymore."
+            return json_response({"error": error}, status=400)
 
         result = await Spawner.cargo.delete(name=deleted_cargo.name)
         event = {
@@ -163,5 +154,5 @@ class Cargo(WebView):
             "name": deleted_cargo.name,
         }
         await streaming.publish("service.cargo.deleted", event)
-        user_message = f"We are removing {deleted_cargo.name}"
-        return json_response({"message": user_message})
+        message = f"We are removing {deleted_cargo.name}"
+        return json_response({"message": message})

@@ -88,6 +88,7 @@ class APIs(WebView):
             'blueprint': ":".join((blueprint.name, blueprint.tag)),
             'networks': ["cassiny-public"],
             'machine_type': data['machine_type'],
+            'command': data['command'],
             'cpu': cpu,
             'ram': ram,
             'gpu': gpu

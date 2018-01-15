@@ -8,7 +8,7 @@ All rights reserved.
 import logging
 import shlex
 from typing import Dict, List, Tuple, Union
-from uuid import uuid4
+from uuid import uuid1
 
 from aiodocker.docker import Docker
 from aiodocker.exceptions import DockerError
@@ -121,7 +121,7 @@ class ServiceManager:
         # container_spec are != from service spec
         container_spec["Labels"] = {
             "user_id": str(user_id),
-            "log_uuid": uuid4().hex,
+            "log_uuid": uuid1().hex,
         }
 
         # command is used when an entrypoint

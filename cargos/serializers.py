@@ -18,6 +18,7 @@ class CargoSchema(Schema):
 
     # not-required fields
     repository = fields.Str()
+    name = fields.Str(dump_only=True)
     created_at = fields.DateTime(format="%Y-%m-%d %H:%M:%S")
 
     # export only
@@ -25,12 +26,14 @@ class CargoSchema(Schema):
     cargo_id = fields.Int(dump_only=True)
     subdomain = fields.Str(dump_only=True)
     user_id = fields.Int(dump_only=True)
+    specs = fields.Raw()
 
     @post_dump
     def owner(self, data):
         if 'user' in self.context:
             if "user_id" in data and data['user_id'] == self.context['user']:
                 data['owner'] = "You"
+        return data
 
 
 class CargoForProbeSchema(Schema):

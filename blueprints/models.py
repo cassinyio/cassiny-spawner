@@ -25,7 +25,6 @@ mBlueprint = Table(
     Column('repository', String(100)),
     Column('name', String(50)),
     Column('tag', String(10)),
-    Column('dockerfile', String(255), nullable=True),
     Column('link', String(255), nullable=True),
     Column('description', String(255)),
     Column('public', Boolean, default=False),

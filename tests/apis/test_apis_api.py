@@ -43,6 +43,7 @@ class TestAPIS:
             'blueprint_id': 1,
             'description': "This is a test",
             'machine_type': "mega",
+            'command': "python app.py 0.0.0.0:8080"
         }
         resp = await cli.post('/spawner/apis', json=body)
         assert resp.status == 200

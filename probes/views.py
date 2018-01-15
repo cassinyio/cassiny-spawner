@@ -50,10 +50,10 @@ class Probe(WebView):
                     (mProbe.c.user_id == user_id) &
                     (mProbe.c.id == probe_id)
             ).select_from(
-                mProbe.outerjoin(mBlueprint, mProbe.c.blueprint_id == mBlueprint.c.id)
+                mProbe.outerjoin(
+                    mBlueprint, mProbe.c.blueprint_id == mBlueprint.c.id)
             )
             probe = await self.query_db(query)
-            log.error(probe)
             probes_schema = ProbeSchema()
             probes_schema.context = {"user": user_id}
             data, _ = probes_schema.dump(probe)
@@ -72,10 +72,7 @@ class Probe(WebView):
         )
         probes = await self.query_db(query, many=True)
 
-        probes_schema = ProbeSchema(
-            many=True,
-            exclude=('subdomain')
-        )
+        probes_schema = ProbeSchema(many=True)
         probes_schema.context = {"user": user_id}
         data, _ = probes_schema.dump(probes)
 
@@ -92,13 +89,25 @@ class Probe(WebView):
         if errors:
             return json_response({"error": errors}, status=400)
 
-        query = mBlueprint.select().where(
-            (mBlueprint.c.id == data['blueprint_id']) &
-            (
-                (mBlueprint.c.user_id == user_id) |
-                (mBlueprint.c.public.is_(True))
+        try:
+            query = mBlueprint.select()\
+                .where(
+                (mBlueprint.c.id == data['blueprint']) &
+                (
+                    (mBlueprint.c.user_id == user_id) |
+                    (mBlueprint.c.public.is_(True))
+                )
             )
-        )
+        except ValueError:
+            query = mBlueprint.select()\
+                .where(
+                (mBlueprint.c.id == data['blueprint']) &
+                (
+                    (mBlueprint.c.user_id == user_id) |
+                    (mBlueprint.c.public.is_(True))
+                )
+            )
+
         blueprint = await self.query_db(query)
 
         if blueprint is None:
@@ -176,7 +185,7 @@ class Probe(WebView):
         deleted_probe = await self.query_db(query.returning(mProbe.c.name))
 
         if deleted_probe is None:
-            error = f"That probe doesn't exist anymore."
+            error = "That probe doesn't exist anymore."
             return json_response({"error": error}, status=400)
 
         await Spawner.probe.delete(name=deleted_probe.name)

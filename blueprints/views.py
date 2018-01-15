@@ -9,6 +9,7 @@ import logging
 import os
 import tarfile
 from uuid import uuid4
+import aiohttp
 
 from aiohttp.web import json_response
 from rampante import streaming
@@ -42,7 +43,10 @@ class Blueprint(WebView):
         blueprints = await self.query_db(query, many=True)
 
         blueprint_schema = BlueprintSchema(many=True)
-        blueprints, _ = blueprint_schema.dump(blueprints)
+        blueprints, errors = blueprint_schema.dump(blueprints)
+
+        if errors:
+            json_response({"error": errors}, status=400)
 
         return json_response({"blueprints": blueprints})
 
@@ -53,14 +57,13 @@ class Blueprint(WebView):
         user_id = payload["user_id"]
         cargo_id = self.request.match_info.get("cargo_id")
 
-        data = await self.request.json()
-
-        blueprint, errors = CreateBlueprint().load(data)
-
-        if errors:
-            json_response({"error": errors}, status=400)
-
         if cargo_id is not None:
+            data = await self.request.json()
+
+            blueprint, errors = CreateBlueprint().load(data)
+            if errors:
+                json_response({"error": errors}, status=400)
+
             try:
                 query = mCargo.delete()\
                     .where(
@@ -93,33 +96,51 @@ class Blueprint(WebView):
 
             return json_response({"message": "We are creating your blueprint."})
 
+        #data = await self.request.json()
+
+        #blueprint, errors = CreateBlueprint().load(data)
+
+        ##    json_response({"error": errors}, status=400)
+
         reader = await self.request.multipart()
-        file = await reader.next()
-        filename = file.filename
 
-        if tarfile.is_tarfile(filename) is False:
-            return json_response({"error": "No proper file format."}, status=400)
+        while True:
+            part = await reader.next()
 
-        file_uuid = f"{uuid4().hex}.tar.gz"
-        folder_path = os.path.join(C.TEMP_BUILD_FOLDER, file_uuid)
+            if part is None:
+                break
 
-        # You cannot rely on Content-Length if transfer is chunked.
-        size = 0
-        with open(folder_path, 'wb') as f:
-            while True:
-                chunk = await file.read_chunk()
-                if not chunk:
-                    break
-                size += len(chunk)
-                f.write(chunk)
+            if part.headers[aiohttp.hdrs.CONTENT_TYPE] == 'application/json':
+                data = await part.json()
+                blueprint, errors = CreateBlueprint().load(data)
+                if errors:
+                    json_response({"error": errors}, status=400)
+                continue
 
-        event = {
-            "user_id": user_id,
-            "token": payload['token'],
-            "path": folder_path,
-            "blueprint": blueprint
-        }
+            file_uuid = f"{uuid4().hex}.tar.gz"
+            file_path = os.path.join(C.TEMP_BUILD_FOLDER, file_uuid)
 
-        await streaming.publish("service.create.blueprint", event)
+            # You cannot rely on Content-Length if transfer is chunked.
+            size = 0
+            with open(file_path, 'wb') as f:
+                while True:
+                    chunk = await part.read_chunk()
+                    if not chunk:
+                        break
+                    size += len(chunk)
+                    f.write(chunk)
+
+            if tarfile.is_tarfile(file_path) is False:
+                os.remove(file_path)
+                return json_response({"error": "No proper file format."}, status=400)
+
+            event = {
+                "user_id": user_id,
+                "token": payload['token'],
+                "path": file_path,
+                "blueprint": blueprint
+            }
+
+        await streaming.publish("service.blueprint.create", event)
 
         return json_response({"message": "We are creating your blueprint."})

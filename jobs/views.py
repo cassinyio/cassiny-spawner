@@ -91,9 +91,10 @@ class Jobs(WebView):
             'repository': blueprint.repository,
             'blueprint': f"{blueprint.name}:{blueprint.tag}",
             'machine_type': data['machine_type'],
+            'command': data['command'],
             'cpu': cpu,
             'ram': ram,
-            'gpu': gpu
+            'gpu': gpu,
         }
 
         name = naminator("job")
@@ -154,9 +155,8 @@ class Jobs(WebView):
             deleted_job = await result.fetchone()
 
         if deleted_job is None:
-            log.error(f"Job doesn't exist inside the database: {job_id}")
-            user_message = f"It seems that job doesn't exist anymore"
-            return json_response({"message": user_message}, status=400)
+            error = "That job doesn't exist anymore."
+            return json_response({"error": error}, status=400)
 
         result = await Spawner.job.delete(name=deleted_job.name)
         event = {

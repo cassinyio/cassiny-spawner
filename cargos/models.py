@@ -26,6 +26,7 @@ mCargo = Table(
     Column('status', Integer, default=0),
     Column('created_at', DateTime(timezone=True),
            server_default=func.now()),
+
     Column('user_id', Integer, nullable=False),
 )
 

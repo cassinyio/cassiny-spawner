@@ -16,8 +16,6 @@ from aiopg.sa import create_engine
 from psycopg2 import OperationalError
 from rampante import scheduler, streaming
 
-# this is need to start the watchers
-import watchers  # noqa:F401
 from apis import routes as api_routes
 from blueprints import routes as blueprint_routes
 from cargos import routes as cargo_routes

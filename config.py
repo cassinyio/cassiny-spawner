@@ -24,7 +24,7 @@ class Config():
         with open("./keys/public_key.pub", mode="rb") as f:
             PUBLIC_KEY = f.read()
     except FileNotFoundError:
-        log.error("PRIVATE KEY not found.")
+        log.error("Public key not found.")
         raise
 
     # STREAM

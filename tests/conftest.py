@@ -53,8 +53,8 @@ def create_tables():
               mUser_probes, mJob, mUser_cargos, mLog]
     for model in models:
         conn.execute(CreateTable(model).compile(engine).__str__())
-    add_blueprint = """INSERT INTO "public"."blueprints"("id","repository","name","tag","dockerfile","link","description","public","created_at","user_id")
-    VALUES(1,'cassinyio','notebook','02946e48',NULL,NULL,NULL,TRUE,E'2017-12-16 22:46:13.515348+00',NULL);"""
+    add_blueprint = """INSERT INTO "public"."blueprints"("id","repository","name","tag","link","description","public","created_at","user_id")
+    VALUES(1,'cassinyio','notebook','02946e48',NULL,NULL,TRUE,E'2017-12-16 22:46:13.515348+00',NULL);"""
     conn.execute(add_blueprint)
 
 
