@@ -7,7 +7,7 @@ aiodocker==0.8.5
 aiohttp==2.3.9
 aiopg==0.13.2
 async-timeout==2.0.0
-botocore==1.8.20
+botocore==1.8.36
 cchardet==2.1.1
 certifi==2017.11.5
 chardet==3.0.4
