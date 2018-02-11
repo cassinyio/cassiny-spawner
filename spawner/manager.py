@@ -7,8 +7,7 @@ All rights reserved.
 
 import logging
 import shlex
-from typing import Dict, List, Tuple, Union
-from uuid import uuid1
+from typing import Any, Dict, List, Tuple
 
 from aiodocker.docker import Docker
 from aiodocker.exceptions import DockerError
@@ -100,10 +99,35 @@ class ServiceManager:
             return blueprint
         return f"{repository}/{blueprint}"
 
+    def _add_resources(self, specs: Dict[str, Any]) -> Dict[str, Any]:
+        """Add resource to the TaskTemplate."""
+        # https://github.com/moby/moby/issues/24713
+        cpu = specs.get('cpu', False)
+        ram = specs.get('ram', False)
+        if cpu and ram:
+            resources = {
+                "Limits": {
+                    "NanoCPUs": int(cpu * 1e9),  # number of cpu
+                    "MemoryBytes": int(ram * 1e9)  # mem in bytes
+                },
+            }
+            return resources
+        return {}
+
+    def _add_placement(self, specs: Dict[str, Any], name: str) -> Dict[str, Any]:
+        """Add placement to the TaskTemplate."""
+        placement = specs.get('placement', [])
+        placement.append(f"node.hostname == {name}")
+
+        if specs.get('gpu', False):
+            placement.append("node.labels.gpu == true")
+
+        return placement
+
     def create_template(self, name: str, user_id: int, specs: Dict) -> Tuple[List, Dict]:
         """Create service template."""
-        TaskTemplate = {}
-        container_spec: Dict[str, Union[str, List, Dict]] = {}
+        TaskTemplate: Dict[str, Any] = {}
+        container_spec: Dict[str, Any] = {}
 
         # Use only blueprint if repository in None
         container_spec['Image'] = self.get_image(specs)
@@ -146,31 +170,15 @@ class ServiceManager:
             container_spec['Mounts'] = []
 
         # add placement conditions
-        placement = specs.get('placement', [])
-        placement.append(f"node.hostname == {name}")
-        if specs.get('gpu', False):
-            placement.append("node.labels.gpu == true")
-
-        TaskTemplate['Placement'] = {'Constraints': placement}
+        TaskTemplate['Placement'] = {'Constraints': self._add_placement(specs=specs, name=name)}
 
         # Restart Policy
-        restart_policy = {}
         if specs['service_type'] == "job":
             # on-failure or none
-            restart_policy.update({"Condition": "none"})
-        if restart_policy:
-            TaskTemplate['RestartPolicy'] = restart_policy
+            TaskTemplate['RestartPolicy'] = {"Condition": "none"}
 
-        # https://github.com/moby/moby/issues/24713
-        cpu = specs.get('cpu', False)
-        ram = specs.get('ram', False)
-        if cpu and ram:
-            resources = {
-                "Limits": {
-                    "NanoCPUs": int(cpu * 1e9),  # number of cpu
-                    "MemoryBytes": int(ram * 1e9)  # mem in bytes
-                },
-            }
+        resources = self._add_resources(specs)
+        if resources:
             TaskTemplate['Resources'] = resources
 
         # set fluentd as a logger

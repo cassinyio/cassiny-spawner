@@ -1,7 +1,7 @@
 from secrets import token_urlsafe
 
 from spawner import Spawner
-from utils import naminator, get_uuid
+from utils import get_uuid, naminator
 
 
 async def test_create_remove_job(loop):
