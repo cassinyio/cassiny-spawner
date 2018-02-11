@@ -37,15 +37,6 @@ class Config():
     DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
     DB_PORT = os.getenv("DB_PORT", 5432)
 
-    # Service size
-    SIZE = {
-        # (cpu, ram, gpu)
-        "mega": (1, 15, False),
-        "exa": (2, 30, False),
-        "yotta": (4, 60, False),
-        "tera+gpu": (4, 15, True),
-    }
-
     # Service status
     STATUS = {
         0: "creating",

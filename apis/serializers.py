@@ -6,7 +6,6 @@ All rights reserved.
 """
 
 from marshmallow import Schema, fields, post_dump
-from marshmallow.validate import OneOf
 
 from config import Config as C
 
@@ -17,8 +16,10 @@ class APIs(Schema):
     # required fields
     description = fields.Str(required=True, allow_none=False)
     blueprint_id = fields.Int(required=True)
-    machine_type = fields.Str(required=True, validate=OneOf(C.SIZE))
+    machine_type = fields.Str(required=True)
     command = fields.Str(required=True, allow_none=False)
+    gpu = fields.Bool(required=True, allow_none=False)
+    premptible = fields.Bool(required=True, allow_none=False)
 
     # not-required fields
     created_at = fields.DateTime(format="%Y-%m-%d %H:%M:%S")

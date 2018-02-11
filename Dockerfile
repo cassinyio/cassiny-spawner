@@ -1,7 +1,5 @@
 # Copyright (c) 2017, Cassiny.io OÜ
 
-# Image for MissionControlCenter
-
 FROM python:3.6.3
 
 LABEL maintainer "wow@cassiny.io"

@@ -9,19 +9,18 @@ import logging
 import os
 import tarfile
 from uuid import uuid4
-import aiohttp
 
+import aiohttp
 from aiohttp.web import json_response
 from rampante import streaming
-from sqlalchemy.sql import select
 
-from blueprints.models import mBlueprint
+from blueprints.models import get_blueprints, mBlueprint
 from blueprints.serializers import (
     BlueprintSchema,
     CreateBlueprint,
 )
-from cargos.models import mCargo
-from config import Config as C
+from cargos.models import get_cargo
+from config import Config
 from utils import WebView, check_quota, verify_token
 
 log = logging.getLogger(__name__)
@@ -35,15 +34,9 @@ class Blueprint(WebView):
         """Get blueprints."""
         user_id = payload["user_id"]
 
-        query = select([mBlueprint])\
-            .where(
-                (mBlueprint.c.public.is_(True)) |
-                (mBlueprint.c.user_id == user_id)
-        )
-        blueprints = await self.query_db(query, many=True)
+        rows = await get_blueprints(self.db, user_id=user_id)
 
-        blueprint_schema = BlueprintSchema(many=True)
-        blueprints, errors = blueprint_schema.dump(blueprints)
+        blueprints, errors = BlueprintSchema(many=True).dump(rows)
 
         if errors:
             json_response({"error": errors}, status=400)
@@ -55,29 +48,16 @@ class Blueprint(WebView):
     async def post(self, payload):
         """Create blueprints."""
         user_id = payload["user_id"]
-        cargo_id = self.request.match_info.get("cargo_id")
+        cargo_ref = self.request.match_info.get("cargo")
 
-        if cargo_id is not None:
+        if cargo_ref is not None:
             data = await self.request.json()
 
             blueprint, errors = CreateBlueprint().load(data)
             if errors:
                 json_response({"error": errors}, status=400)
 
-            try:
-                query = mCargo.delete()\
-                    .where(
-                    (mCargo.c.user_id == user_id) &
-                    (mCargo.c.id == int(cargo_id))
-                )
-            except ValueError:
-                query = mCargo.delete()\
-                    .where(
-                    (mCargo.c.user_id == user_id) &
-                    (mCargo.c.name == cargo_id)
-                )
-
-            cargo = await self.query_db(query)
+            cargo = await get_cargo(self.db, user_id=user_id, cargo_ref=cargo_ref)
 
             if cargo is None:
                 error = "Did you select the right cargo?"
@@ -96,12 +76,7 @@ class Blueprint(WebView):
 
             return json_response({"message": "We are creating your blueprint."})
 
-        #data = await self.request.json()
-
-        #blueprint, errors = CreateBlueprint().load(data)
-
-        ##    json_response({"error": errors}, status=400)
-
+        # when passing a file
         reader = await self.request.multipart()
 
         while True:
@@ -118,29 +93,33 @@ class Blueprint(WebView):
                 continue
 
             file_uuid = f"{uuid4().hex}.tar.gz"
-            file_path = os.path.join(C.TEMP_BUILD_FOLDER, file_uuid)
+            file_path = os.path.join(Config.TEMP_BUILD_FOLDER, file_uuid)
 
-            # You cannot rely on Content-Length if transfer is chunked.
-            size = 0
-            with open(file_path, 'wb') as f:
-                while True:
-                    chunk = await part.read_chunk()
-                    if not chunk:
-                        break
-                    size += len(chunk)
-                    f.write(chunk)
+            await write_file(file_path=file_path, part=part)
 
             if tarfile.is_tarfile(file_path) is False:
                 os.remove(file_path)
                 return json_response({"error": "No proper file format."}, status=400)
 
-            event = {
-                "user_id": user_id,
-                "token": payload['token'],
-                "path": file_path,
-                "blueprint": blueprint
-            }
+        event = {
+            "user_id": user_id,
+            "token": payload['token'],
+            "path": file_path,
+            "blueprint": blueprint
+        }
 
         await streaming.publish("service.blueprint.create", event)
 
         return json_response({"message": "We are creating your blueprint."})
+
+
+async def write_file(file_path: str, part) -> None:
+    # You cannot rely on Content-Length if transfer is chunked.
+    size = 0
+    with open(file_path, 'wb') as f:
+        while True:
+            chunk = await part.read_chunk()
+            if not chunk:
+                break
+            size += len(chunk)
+            f.write(chunk)

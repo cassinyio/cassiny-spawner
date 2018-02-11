@@ -2,6 +2,6 @@
 
 from blueprints.routes import routes
 from blueprints.models import mBlueprint
-from blueprints.events import create_blueprint
+from blueprints import events
 
-__all__ = ("routes", "mBlueprint", "create_blueprint")
+__all__ = ("routes", "mBlueprint", "events")

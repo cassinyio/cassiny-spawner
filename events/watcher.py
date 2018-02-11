@@ -11,6 +11,7 @@ from events.models import mLog
 from events.utils import DockerEvent
 from jobs import mJob
 from probes import mProbe
+from utils import query_db
 
 MODEL_TYPE = {
     "probe": mProbe,
@@ -24,6 +25,20 @@ log = logging.getLogger(__name__)
 
 TOPIC_NAME = 'user.notification'
 REGEX = re.compile('([a-z]+)-[a-z]+-[0-9]{4}$')
+
+
+def is_container_event(event):
+    if event['Type'] == 'container':
+        if event['Action'] in ("create", "start", "die", "destroy"):
+            return True
+    return False
+
+
+def is_node_event(event):
+    if event['Type'] == 'container':
+        if event['Action'] in ("create", "start", "die", "destroy"):
+            return True
+    return False
 
 
 def get_service_type(name: str) -> Optional[str]:
@@ -83,9 +98,11 @@ async def docker_listener(app):
             if event is None:
                 break
 
-            actions = ("create", "start", "die", "destroy")
+            if is_node_event(event):
+                pass
 
-            if event['Type'] == 'container' and event['Action'] in actions:
+            if is_container_event(event):
+
                 docker_log = DockerEvent().pack(event=event)
 
                 service_type = get_service_type(docker_log.name)
@@ -96,29 +113,30 @@ async def docker_listener(app):
 
                     model = MODEL_TYPE[service_type]
 
-                    async with app["db"].acquire() as conn:
-                        query = mLog.insert().values(
-                            uuid=docker_log.log_uuid,
-                            log_type=docker_log.type,
-                            service_type=service_type,
-                            name=docker_log.name,
-                            action=docker_log.action,
-                            user_id=docker_log.user_id
+                    query = mLog.insert().values(
+                        uuid=docker_log.log_uuid,
+                        log_type=docker_log.type,
+                        service_type=service_type,
+                        name=docker_log.name,
+                        action=docker_log.action,
+                        user_id=docker_log.user_id
+                    )
+                    await query_db(app["db"], query, get_result=False)
+
+                    status = get_service_status(
+                        service_type, docker_log.action)
+
+                    if status:
+                        query = model.update()\
+                            .where(model.c.name == docker_log.name)\
+                            .values(
+                            status=status,
                         )
-                        await conn.execute(query)
-
-                        status = get_service_status(service_type, docker_log.action)
-
-                        if status:
-                            query = model.update()\
-                                .where(model.c.name == docker_log.name)\
-                                .values(
-                                status=status,
-                            )
-                            await conn.execute(query)
+                        await query_db(app["db"], query, get_result=False)
 
                     message = prepare_message(docker_log, service_type)
                     if message:
                         await streaming.publish(TOPIC_NAME, message)
+
     except asyncio.CancelledError:
         log.info("Shutting down Docker watcher....")
