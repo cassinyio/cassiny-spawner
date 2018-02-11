@@ -39,13 +39,14 @@ async def create_job(queue, event, app):
     name = naminator("job")
 
     specs = {
+        'uuid': event['uuid'],
         'repository': blueprint.repository,
         'blueprint': f"{blueprint.name}:{blueprint.tag}",
         'networks': ["cassiny-public"],
         'machine_type': job['machine_type'],
         'command': job['command'],
         'gpu': job['gpu'],
-        'premptible': job['premptible']
+        'preemptible': job['preemptible']
     }
 
     query = mJob.insert().values(

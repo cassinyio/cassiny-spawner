@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 @subscribe_on("service.cargo.create")
 async def create_cargo(queue, event, app):
     """Create a new cargo."""
-    log.info(f"{event['uuid']}: {event}")
+    log.info(f"Event: {event}")
 
     user_id = event["user_id"]
     cargo = event["data"]
@@ -24,6 +24,7 @@ async def create_cargo(queue, event, app):
     secret_key = token_urlsafe(30)
 
     specs = {
+        "uuid": event['uuid'],
         "access_key": access_key,
         "secret_key": secret_key,
         "description": cargo['description'],

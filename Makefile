@@ -7,7 +7,7 @@ POSTGRES_DB=cassiny
 
 lint:
 	@isort -rc -c --diff -m 3 app.py config.py factory.py create_db.py apis blueprints cargos events jobs probes spawner utils tests
-	flake8 app.py config.py factory.py create_db.py apis blueprints cargos events jobs probes spawner utils tests
+	@flake8 app.py config.py factory.py create_db.py apis blueprints cargos events jobs probes spawner utils tests
 	@mypy app.py config.py factory.py create_db.py apis blueprints cargos events jobs probes spawner utils tests --ignore-missing-imports
 
 test:

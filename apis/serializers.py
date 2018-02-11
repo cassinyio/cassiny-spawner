@@ -15,11 +15,11 @@ class APIs(Schema):
 
     # required fields
     description = fields.Str(required=True, allow_none=False)
-    blueprint_id = fields.Int(required=True)
+    blueprint = fields.Str(required=True)
     machine_type = fields.Str(required=True)
     command = fields.Str(required=True, allow_none=False)
     gpu = fields.Bool(required=True, allow_none=False)
-    premptible = fields.Bool(required=True, allow_none=False)
+    preemptible = fields.Bool(required=True, allow_none=False)
 
     # not-required fields
     created_at = fields.DateTime(format="%Y-%m-%d %H:%M:%S")

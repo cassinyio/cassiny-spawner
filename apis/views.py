@@ -53,6 +53,7 @@ class APIs(WebView):
 
         data, errors = ApiSchema().load(data)
         if errors:
+            log.debug(errors)
             return json_response({"error": errors}, status=400)
 
         event = {

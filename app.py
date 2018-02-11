@@ -65,7 +65,7 @@ async def start_task_manager(app):
     """Connect to the streams."""
     await streaming.start(server=C.STREAM_URI, client_name="service-01", service_group="cassiny-spawner", loop=app.loop)
     app['task_manager'] = asyncio.ensure_future(
-        scheduler(loop=app.loop, queue_size=50))
+        scheduler(loop=app.loop, queue_size=50, app=app))
 
 
 async def start_logger(app):

@@ -40,10 +40,12 @@ class TestAPIS:
 
     async def test_post_apis(self, cli):
         body = {
-            'blueprint_id': 1,
+            'blueprint': "2a83d4be0f7011e89e4b35694e577c22",
             'description': "This is a test",
             'machine_type': "mega",
-            'command': "python app.py 0.0.0.0:8080"
+            'command': "python app.py 0.0.0.0:8080",
+            'preemptible': False,
+            'gpu': False
         }
         resp = await cli.post('/spawner/apis', json=body)
         assert resp.status == 200

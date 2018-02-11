@@ -23,7 +23,7 @@ mLog = Table(
     metadata,
     Column('id', Integer, primary_key=True),
     # unique log identifier
-    Column('uuid', UUID()),
+    Column('uuid', UUID),
     Column('log_type', String(10)),
     Column('service_type', String(5)),
     Column('name', String(200)),

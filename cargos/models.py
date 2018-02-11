@@ -20,7 +20,7 @@ from factory import metadata
 
 mCargo = Table(
     'cargos', metadata,
-    Column('uuid', UUID(), primary_key=True),
+    Column('uuid', UUID, primary_key=True),
     Column('name', String(100), unique=True),
     Column('specs', JSONB),
     Column('status', Integer, default=0),
@@ -36,7 +36,7 @@ mUser_cargos = Table(
     Column('created_at', DateTime(timezone=True),
            server_default=func.now()),
     Column('user_id', Integer, nullable=False),
-    Column('cargo_uuid', Integer, ForeignKey(
+    Column('cargo_uuid', UUID, ForeignKey(
         "cargos.uuid"), nullable=False),
 )
 

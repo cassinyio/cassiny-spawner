@@ -41,10 +41,12 @@ async def test_post_jobs_error(cli):
 
 async def test_post_jobs(cli):
     body = {
-        'blueprint_id': 1,
+        'blueprint': "2a83d4be-0f70-11e8-9e4b-35694e577c22",
         'description': "This is a test",
         'machine_type': "mega",
-        'command': "python -c 'print (1)'"
+        'command': "python -c 'print (1)'",
+        'preemptible': False,
+        'gpu': False
     }
     resp = await cli.post('/spawner/jobs', json=body)
     assert resp.status == 200

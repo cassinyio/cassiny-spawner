@@ -21,7 +21,7 @@ from factory import metadata
 
 mProbe = Table(
     'probes', metadata,
-    Column('uuid', UUID(), primary_key=True),
+    Column('uuid', UUID, primary_key=True),
     Column('name', String(100), unique=True),
     Column('created_at', DateTime(timezone=True),
            server_default=func.now()),
@@ -31,7 +31,7 @@ mProbe = Table(
     Column('status', Integer, default=0),
 
     Column('user_id', Integer, nullable=False),
-    Column('blueprint_id', Integer, ForeignKey("blueprints.id"),
+    Column('blueprint_uuid', UUID, ForeignKey("blueprints.uuid"),
            nullable=False),
 )
 
@@ -41,7 +41,7 @@ mUser_probes = Table(
     Column('id', Integer, primary_key=True),
     Column('created_at', DateTime(timezone=True),
            server_default=func.now()),
-    Column('probe_id', Integer, ForeignKey("probes.id"), nullable=False),
+    Column('probe_uuid', UUID, ForeignKey("probes.uuid"), nullable=False),
     Column('user_id', Integer, nullable=False),
 )
 
