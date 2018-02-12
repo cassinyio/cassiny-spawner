@@ -17,7 +17,7 @@ jmespath==0.9.3
 MarkupSafe==1.0
 marshmallow==2.15.0
 msgpack-python==0.5.4
-multidict==3.3.2
+multidict==4.1.0
 packaging==16.8
 psycopg2==2.7.3.2
 pycares==2.3.0
