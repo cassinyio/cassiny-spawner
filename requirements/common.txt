@@ -9,7 +9,7 @@ aiopg==0.13.2
 async-timeout==2.0.0
 botocore==1.8.40
 cchardet==2.1.1
-certifi==2017.11.5
+certifi==2018.1.18
 chardet==3.0.4
 docutils==0.14
 Jinja2==2.10
