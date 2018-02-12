@@ -29,6 +29,7 @@ docker-test:
 	@docker pull minio/minio:RELEASE.2017-11-22T19-55-46Z
 	@docker pull cassinyio/notebook:02946e48
 	@docker swarm init
+	@docker network create --driver overlay --attachable cassiny-public
 	@docker run -d --name streams --network test -p 4222:4222 nats-streaming:0.7.0
 	@docker run -d --name postgres --network test -e POSTGRES_DB=$(POSTGRES_DB) -e POSTGRES_USER=$(POSTGRES_USER) -e POSTGRES_PASSWORD=$(POSTGRES_PASSWORD) postgres:10.0
 	@docker build -t $(SERVICE) -f Dockerfile.test .
@@ -39,4 +40,5 @@ clean-test:
 	@docker rm -f streams
 	@docker rm -f postgres
 	@docker network rm test
+	@docker network rm cassiny-public
 	@docker swarm leave -f

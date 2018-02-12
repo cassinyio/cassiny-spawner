@@ -31,6 +31,7 @@ jobs:
         - docker run -d --name streams -p 4222:4222 nats-streaming:0.7.0
         - docker run -d --name postgres -e POSTGRES_DB=$POSTGRES_DB -e POSTGRES_USER=$POSTGRES_USER -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD -p $DB_PORT:5432 postgres:10.0
         - docker swarm init
+        - docker network create --driver overlay --attachable cassiny-public
         - sudo mkdir /keys
         - sudo chown -R $USER /keys
         - ssh-keygen -t rsa -b 4096 -f /keys/private.key -N ''

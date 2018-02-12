@@ -1,6 +1,6 @@
 # Copyright (c) 2017, Cassiny.io OÜ
 
-FROM python:3.6.3
+FROM python:3.6.4
 
 LABEL maintainer "wow@cassiny.io"
 
