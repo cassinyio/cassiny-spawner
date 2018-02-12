@@ -25,32 +25,29 @@ patch('utils.auth._validate_token', _validate_token).start()
 patch('utils.quota._get_limits', _get_limits).start()
 
 
-class TestProbes:
-    async def test_get_probe(self, cli):
-        resp = await cli.get('/spawner/probes/1')
-        assert resp.status == 200
-        data = await resp.json()
-        assert isinstance(data['probe'], dict)
+async def test_get_probes(cli):
+    resp = await cli.get('/spawner/probes')
+    assert resp.status == 200
+    data = await resp.json()
+    assert isinstance(data['probes'], list)
 
-    async def test_get_probes(self, cli):
-        resp = await cli.get('/spawner/probes')
-        assert resp.status == 200
-        data = await resp.json()
-        assert isinstance(data['probes'], list)
 
-    async def test_post_probes_error(self, cli):
-        resp = await cli.post('/spawner/probes', json={})
-        assert resp.status == 400
-        data = await resp.json()
-        assert data["error"]
+async def test_post_probes_error(cli):
+    resp = await cli.post('/spawner/probes', json={})
+    assert resp.status == 400
+    data = await resp.json()
+    assert data["error"]
 
-    async def test_post_probes(self, cli):
-        body = {
-            'blueprint_id': 1,
-            'description': "This is a test",
-            'machine_type': "mega",
-        }
-        resp = await cli.post('/spawner/probes', json=body)
-        assert resp.status == 200
-        data = await resp.json()
-        assert data["message"]
+
+async def test_post_probes(cli):
+    body = {
+        'blueprint': "2a83d4be-0f70-11e8-9e4b-35694e577c22",
+        'description': "This is a test",
+        'machine_type': "mega",
+        'preemptible': True,
+        'gpu': True
+    }
+    resp = await cli.post('/spawner/probes', json=body)
+    assert resp.status == 200
+    data = await resp.json()
+    assert data["message"]

@@ -28,17 +28,25 @@ jobs:
       install:
         - sudo apt-get update
         - sudo apt-get install docker-ce
-        - pip install tox codecov
-        - docker run -d --name streams -p 4222:4222 nats-streaming:0.6.0
+        - docker run -d --name streams -p 4222:4222 nats-streaming:0.7.0
         - docker run -d --name postgres -e POSTGRES_DB=$POSTGRES_DB -e POSTGRES_USER=$POSTGRES_USER -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD -p $DB_PORT:5432 postgres:10.0
         - docker swarm init
+        - docker network create --driver overlay --attachable cassiny-public
+        - sudo mkdir /keys
+        - sudo chown -R $USER /keys
+        - ssh-keygen -t rsa -b 4096 -f /keys/private.key -N ''
+        - openssl rsa -in /keys/private.key -pubout -outform PEM -out /keys/public_key.pub
+        - pip install -r requirements/ci.txt
+        - pip install -r requirements/common.txt
       script:
-        - tox
+        - make lint
+        - make test
       after_success:
         - docker rm -f streams
         - docker rm -f postgres
         - docker swarm leave -f
         - codecov
+
     - stage: deploy
       script:
         - docker login -u $DOCKER_USER -p $DOCKER_PASSWORD

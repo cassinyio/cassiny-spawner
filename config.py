@@ -21,7 +21,7 @@ class Config():
 
     # PUBLIC KEY
     try:
-        with open("./keys/public_key.pub", mode="rb") as f:
+        with open("/keys/public_key.pub", mode="rb") as f:
             PUBLIC_KEY = f.read()
     except FileNotFoundError:
         log.error("Public key not found.")
@@ -36,15 +36,6 @@ class Config():
     DB_NAME = os.getenv("DB_NAME", "cassiny")
     DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
     DB_PORT = os.getenv("DB_PORT", 5432)
-
-    # Service size
-    SIZE = {
-        # (cpu, ram, gpu)
-        "mega": (1, 15, False),
-        "exa": (2, 30, False),
-        "yotta": (4, 60, False),
-        "tera+gpu": (4, 15, True),
-    }
 
     # Service status
     STATUS = {

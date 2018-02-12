@@ -1,7 +1,7 @@
 from secrets import token_urlsafe
 
 from spawner import Spawner
-from utils import naminator
+from utils import get_uuid, naminator
 
 
 async def test_create_remove_job(loop):
@@ -13,6 +13,7 @@ async def test_create_remove_job(loop):
         "ram": 100,
         "service_type": "job",
         "command": "python -c 'for i in range(100): print(i)'",
+        "uuid": get_uuid().hex,
     }
 
     await Spawner.job.create(
@@ -36,6 +37,7 @@ async def create_remove_api(loop):
         "ram": 100,
         "service_type": "api",
         "command": "python -c 'for i in range(100): print(i)'",
+        "uuid": get_uuid().hex,
     }
 
     await Spawner.api.create(
@@ -62,6 +64,7 @@ async def test_create_remove_probe(loop):
         "cpu": 1,
         "ram": 100,
         "service_type": "probe",
+        "uuid": get_uuid().hex,
     }
 
     await Spawner.probe.create(
@@ -86,6 +89,7 @@ async def test_create_remove_cargo(loop):
         'args': "server /data",
         'repository': "minio",
         'blueprint': "minio:RELEASE.2017-08-05T00-00-53Z",
+        "uuid": get_uuid().hex,
     }
 
     await Spawner.cargo.create(

@@ -10,6 +10,18 @@ from aiohttp import web
 from config import Config
 
 
+async def query_db(db, query, many=False, get_result=True):
+        """Simplify calling the db."""
+        async with db.acquire() as conn:
+            result = await conn.execute(query)
+            if get_result:
+                if not many:
+                    row = await result.fetchone()
+                    return row
+                rows = await result.fetchall()
+                return rows
+
+
 class WebView (web.View):
     """Subclass of web.View to pass some properties to all the views.
 
@@ -29,11 +41,4 @@ class WebView (web.View):
 
     async def query_db(self, query, many=False, get_result=True):
         """Simplify calling the db."""
-        async with self.db.acquire() as conn:
-            result = await conn.execute(query)
-            if get_result:
-                if not many:
-                    row = await result.fetchone()
-                    return row
-                rows = await result.fetchall()
-                return rows
+        return await query_db(self.db, query=query, many=many, get_result=get_result)

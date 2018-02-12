@@ -6,7 +6,6 @@ All rights reserved.
 """
 
 from marshmallow import Schema, fields, post_dump
-from marshmallow.validate import OneOf
 
 from config import Config as C
 
@@ -16,8 +15,8 @@ class JobSchema(Schema):
 
     # required fields
     description = fields.Str(required=True, allow_none=False)
-    blueprint = fields.Int(required=True)
-    machine_type = fields.Str(required=True, validate=OneOf(C.SIZE))
+    blueprint = fields.Str(required=True)
+    machine_type = fields.Str(required=True, load_only=True)
     command = fields.Str(required=True, allow_none=False)
 
     # export only

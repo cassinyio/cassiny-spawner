@@ -1,6 +1,6 @@
 import re
 
-from utils.name_generator import naminator
+from utils import naminator
 
 
 def test_general_functionality():

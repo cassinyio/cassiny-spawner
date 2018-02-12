@@ -25,13 +25,6 @@ patch('utils.auth._validate_token', _validate_token).start()
 patch('utils.quota._get_limits', _get_limits).start()
 
 
-async def test_get_cargo(cli):
-    resp = await cli.get('/spawner/cargos/1')
-    assert resp.status == 200
-    data = await resp.json()
-    assert isinstance(data['cargo'], dict)
-
-
 async def test_get_cargos(cli):
     resp = await cli.get('/spawner/cargos')
     assert resp.status == 200

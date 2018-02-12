@@ -1,7 +1,9 @@
-"""Generator of random names."""
+"""Generator of random things."""
 
+import random
 import secrets
 from typing import Sequence
+from uuid import UUID, uuid1
 
 # len(_adjectives) == 91
 _adjectives = (
@@ -82,3 +84,8 @@ def _random_element(strings: Sequence[str]) -> str:
     """
 
     return secrets.choice(strings)
+
+
+def get_uuid() -> UUID:
+    """Return a UUID1 with a random node."""
+    return uuid1((random.getrandbits(48) | 0x010000000000))
