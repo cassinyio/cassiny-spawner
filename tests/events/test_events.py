@@ -1,4 +1,4 @@
-from events.watcher import (
+from events.service import (
     get_service_status,
     get_service_type,
 )
