@@ -7,8 +7,17 @@ All rights reserved.
 
 import logging
 import os
+from enum import IntEnum
 
 log = logging.getLogger(__name__)
+
+
+class Status(IntEnum):
+    Creating = 0
+    Running = 1
+    Completed = 2
+    Error = 3
+    Stopped = 4
 
 
 class Config():
@@ -36,15 +45,6 @@ class Config():
     DB_NAME = os.getenv("DB_NAME", "cassiny")
     DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
     DB_PORT = os.getenv("DB_PORT", 5432)
-
-    # Service status
-    STATUS = {
-        0: "creating",
-        1: "running",
-        2: "completed",
-        3: "error",
-        4: "stopped",
-    }
 
     # APPS #
     # public url to access apps

@@ -15,7 +15,7 @@ from utils import WebView, verify_token
 
 
 class Events(WebView):
-    """Views to handle events."""
+    """Return services' events."""
 
     @verify_token
     async def get(self, payload):

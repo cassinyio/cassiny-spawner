@@ -1,95 +1,37 @@
 import asyncio
 import logging
-import re
-from typing import Optional
+from types import MappingProxyType
 
 from rampante import streaming
+from sqlalchemy.exc import IntegrityError
 
 from apis import mApi
 from cargos import mCargo
-from events.models import mLog
-from events.utils import DockerEvent
+from events.service import (
+    add_log,
+    prepare_message,
+    update_service_status,
+    validate_docker_event,
+)
 from jobs import mJob
 from probes import mProbe
-from utils import query_db
 
-MODEL_TYPE = {
+MODEL_TYPE = MappingProxyType({
     "probe": mProbe,
     "api": mApi,
     "cargo": mCargo,
     "job": mJob,
-}
+})
 
 
 log = logging.getLogger(__name__)
 
 TOPIC_NAME = 'user.notification'
-REGEX = re.compile('([a-z]+)-[a-z]+-[0-9]{4}$')
-
-
-def is_container_event(event):
-    if event['Type'] == 'container':
-        if event['Action'] in ("create", "start", "die", "destroy"):
-            return True
-    return False
-
-
-def is_node_event(event):
-    if event['Type'] == 'container':
-        if event['Action'] in ("create", "start", "die", "destroy"):
-            return True
-    return False
-
-
-def get_service_type(name: str) -> Optional[str]:
-    """Return type of a service, None if don't match."""
-    try:
-        return REGEX.match(name)[1]
-    except TypeError:
-        return None
-
-
-def get_service_status(service_type, action):
-    """Return `False` or the current status for a service."""
-    if service_type in ("probe", "cargo", "api"):
-        if action == 'start':
-            return 1
-        if action == 'destroy':
-            return 4
-    if service_type == "job":
-        if action == 'start':
-            return 1
-        if action == 'die':
-            return 2
-    return False
-
-
-def prepare_message(log, service_type):
-    """Check if a message has to be sent."""
-    # send messages only for started and destroyed services
-    if log.action in ("start", "destroy"):
-        if log.action == "start":
-            msg = "created"
-            text = "has been created"
-
-        if log.action == "destroy":
-            msg = "destroyed"
-            text = "has been destroyed"
-
-        ws_msg = {
-            'user_id': log.user_id,
-            'msg_type': service_type,
-            'title': f"{log.name} {msg}",
-            'text': f"Your {service_type} {text}",
-            'timestamp': log.time
-        }
-        return ws_msg
-    return None
 
 
 async def docker_listener(app):
     """Docker events listener."""
-    log.info("Docker watcher started")
+    log.info("docker watcher started")
     subscriber = app['docker'].events.subscribe()
     try:
         while True:
@@ -98,45 +40,23 @@ async def docker_listener(app):
             if event is None:
                 break
 
-            if is_node_event(event):
-                pass
+            with validate_docker_event(event) as dockerlog:
 
-            if is_container_event(event):
+                log.info(dockerlog.to_dict())
 
-                docker_log = DockerEvent().pack(event=event)
+                model = MODEL_TYPE[dockerlog.service_type]
 
-                service_type = get_service_type(docker_log.name)
+                try:
+                    await add_log(app['db'], dockerlog)
+                except IntegrityError:
+                    # The paig log uuid and action is already inside the db
+                    log.warning(f"Log ID ({dockerlog.uuid}) with action ({dockerlog.action}) is already inside the db, skipping.")
+                else:
+                    await update_service_status(app['db'], model, dockerlog)
 
-                if docker_log.user_id and service_type is not None:
-
-                    log.info(docker_log.to_dict())
-
-                    model = MODEL_TYPE[service_type]
-
-                    query = mLog.insert().values(
-                        uuid=docker_log.log_uuid,
-                        log_type=docker_log.type,
-                        service_type=service_type,
-                        name=docker_log.name,
-                        action=docker_log.action,
-                        user_id=docker_log.user_id
-                    )
-                    await query_db(app["db"], query, get_result=False)
-
-                    status = get_service_status(
-                        service_type, docker_log.action)
-
-                    if status:
-                        query = model.update()\
-                            .where(model.c.name == docker_log.name)\
-                            .values(
-                            status=status,
-                        )
-                        await query_db(app["db"], query, get_result=False)
-
-                    message = prepare_message(docker_log, service_type)
-                    if message:
-                        await streaming.publish(TOPIC_NAME, message)
+                message = prepare_message(dockerlog)
+                if message:
+                    await streaming.publish(TOPIC_NAME, message)
 
     except asyncio.CancelledError:
-        log.info("Shutting down Docker watcher....")
+        log.info("Shutting down docker watcher....")
