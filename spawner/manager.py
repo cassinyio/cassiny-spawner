@@ -7,7 +7,7 @@ All rights reserved.
 
 import logging
 import shlex
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Mapping, Tuple
 
 from aiodocker.docker import Docker
 from aiodocker.exceptions import DockerError
@@ -37,8 +37,7 @@ class ServiceManager:
         """Single global instance for docker client."""
         cls = self.__class__
         if cls._docker is None:
-            docker = Docker()
-            cls._docker = docker
+            cls._docker = Docker()
         return cls._docker
 
     async def get_service(self, name: str):
@@ -48,7 +47,7 @@ class ServiceManager:
             service = await self.docker.services.inspect(name)
         except DockerError:
             service = None
-            log.warning(f"Docker service {name} is gone")
+            log.warning(f"Service {name} is gone")
 
         return service
 
@@ -56,13 +55,14 @@ class ServiceManager:
         self,
         *,
         name: str,
-        service_labels: Dict=None,
+        service_labels: Mapping=None,
         user_id: int,
-        specs: Dict,
-        env: Dict
+        specs: Mapping,
+        env: Mapping
     ) -> bool:
         """Create new services."""
-        networks, task_template = self.create_template(user_id=user_id, name=name, specs=specs)
+        networks, task_template = self.create_template(
+            user_id=user_id, name=name, specs=specs)
 
         # pass envs to the service
         if env is not None:
@@ -90,7 +90,7 @@ class ServiceManager:
             return True
 
     @staticmethod
-    def get_image(specs: Dict) -> str:
+    def get_image(specs: Mapping) -> str:
         """Create an URI for the given image."""
         # Use only blueprint if repository in None
         repository = specs.get('repository', None)
@@ -99,7 +99,7 @@ class ServiceManager:
             return blueprint
         return f"{repository}/{blueprint}"
 
-    def _add_resources(self, specs: Dict[str, Any]) -> Dict[str, Any]:
+    def _add_resources(self, specs: Mapping[str, Any]) -> Mapping[str, Any]:
         """Add resource to the TaskTemplate."""
         # https://github.com/moby/moby/issues/24713
         cpu = specs.get('cpu', False)
@@ -114,17 +114,23 @@ class ServiceManager:
             return resources
         return {}
 
-    def _add_placement(self, specs: Dict[str, Any], name: str) -> Dict[str, Any]:
+    def _add_placement(self, specs: Mapping[str, Any], name: str) -> Mapping[str, Any]:
         """Add placement to the TaskTemplate."""
         placement = specs.get('placement', [])
-        placement.append(f"node.hostname == {name}")
+
+        # cargos have the constraint to be run on storage servers
+        if specs['service_type'] == "cargo":
+            constraint = "node.labels.type == storage"
+            placement.append(constraint)
+        else:
+            placement.append(f"node.hostname == {name}")
 
         if specs.get('gpu', False):
             placement.append("node.labels.gpu == true")
 
         return placement
 
-    def create_template(self, name: str, user_id: int, specs: Dict) -> Tuple[List, Dict]:
+    def create_template(self, name: str, user_id: int, specs: Mapping) -> Tuple[List, Mapping]:
         """Create service template."""
         TaskTemplate: Dict[str, Any] = {}
         container_spec: Dict[str, Any] = {}
@@ -170,7 +176,8 @@ class ServiceManager:
             container_spec['Mounts'] = []
 
         # add placement conditions
-        TaskTemplate['Placement'] = {'Constraints': self._add_placement(specs=specs, name=name)}
+        TaskTemplate['Placement'] = {
+            'Constraints': self._add_placement(specs=specs, name=name)}
 
         # Restart Policy
         if specs['service_type'] == "job":

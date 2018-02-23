@@ -29,7 +29,7 @@ async def create_cargo(queue, event, app):
         "secret_key": secret_key,
         "description": cargo['description'],
         "size": cargo.get("size", 10),
-        "cpu": 1,
+        "cpu": 0.25,
         "ram": 0.5,
     }
 

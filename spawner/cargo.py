@@ -62,13 +62,6 @@ class Cargo(BaseService):
             "traefik.docker.network": specs["networks"][-1],
         }
 
-        # cargos have the constraint to be run on storage servers
-        constraint = "node.labels.type == storage"
-        if 'placement' in specs:
-            specs['placement'].append(constraint)
-        else:
-            specs['placement'] = [constraint]
-
         service_id = await self._spawner.create(
             name=name, user_id=user_id, specs=specs,
             env=env, service_labels=service_labels
