@@ -17,7 +17,7 @@ marshmallow==2.15.0
 msgpack-python==0.5.5
 multidict==4.1.0
 packaging==17.1
-psycopg2==2.7.3.2
+psycopg2==2.7.4
 pycares==2.3.0
 PyJWT==1.5.3
 pyparsing==2.2.0
