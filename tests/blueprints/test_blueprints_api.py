@@ -26,7 +26,7 @@ patch('utils.quota._get_limits', _get_limits).start()
 
 
 async def test_get_blueprints(cli):
-    resp = await cli.get('/spawner/blueprints')
+    resp = await cli.get('/api/spawner/blueprints')
     assert resp.status == 200
     data = await resp.json()
     assert data['blueprints']

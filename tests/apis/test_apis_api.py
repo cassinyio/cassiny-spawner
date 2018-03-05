@@ -27,13 +27,13 @@ patch('utils.quota._get_limits', _get_limits).start()
 
 class TestAPIS:
     async def test_get_apis(self, cli):
-        resp = await cli.get('/spawner/apis')
+        resp = await cli.get('/api/spawner/apis')
         assert resp.status == 200
         data = await resp.json()
         assert data['apis'] == []
 
     async def test_post_apis_error(self, cli):
-        resp = await cli.post('/spawner/apis', json={})
+        resp = await cli.post('/api/spawner/apis', json={})
         assert resp.status == 400
         data = await resp.json()
         assert data["error"]
@@ -47,7 +47,7 @@ class TestAPIS:
             'preemptible': False,
             'gpu': False
         }
-        resp = await cli.post('/spawner/apis', json=body)
+        resp = await cli.post('/api/spawner/apis', json=body)
         assert resp.status == 200
         data = await resp.json()
         assert data["message"]

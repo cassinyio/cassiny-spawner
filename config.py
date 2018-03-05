@@ -30,7 +30,7 @@ class Config():
 
     # PUBLIC KEY
     try:
-        with open("/keys/public_key.pub", mode="rb") as f:
+        with open("./keys/public_key.pub", mode="rb") as f:
             PUBLIC_KEY = f.read()
     except FileNotFoundError:
         log.error("Public key not found.")
