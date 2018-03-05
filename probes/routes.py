@@ -8,9 +8,9 @@ All rights reserved.
 from probes.views import Probe
 
 routes = (
-    ('GET', '/spawner/probes', Probe),
-    ('GET', '/spawner/probes/{probe_id}', Probe),
-    ('POST', '/spawner/probes', Probe),
-    ('PATCH', '/spawner/probes/{probe_id}', Probe),
-    ('DELETE', '/spawner/probes/{probe_id}', Probe),
+    ('GET', '/api/spawner/probes', Probe),
+    ('GET', '/api/spawner/probes/{probe_id}', Probe),
+    ('POST', '/api/spawner/probes', Probe),
+    ('PATCH', '/api/spawner/probes/{probe_id}', Probe),
+    ('DELETE', '/api/spawner/probes/{probe_id}', Probe),
 )

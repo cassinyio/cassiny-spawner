@@ -26,14 +26,14 @@ patch('utils.quota._get_limits', _get_limits).start()
 
 
 async def test_get_probes(cli):
-    resp = await cli.get('/spawner/probes')
+    resp = await cli.get('/api/spawner/probes')
     assert resp.status == 200
     data = await resp.json()
     assert isinstance(data['probes'], list)
 
 
 async def test_post_probes_error(cli):
-    resp = await cli.post('/spawner/probes', json={})
+    resp = await cli.post('/api/spawner/probes', json={})
     assert resp.status == 400
     data = await resp.json()
     assert data["error"]
@@ -47,7 +47,7 @@ async def test_post_probes(cli):
         'preemptible': True,
         'gpu': True
     }
-    resp = await cli.post('/spawner/probes', json=body)
+    resp = await cli.post('/api/spawner/probes', json=body)
     assert resp.status == 200
     data = await resp.json()
     assert data["message"]

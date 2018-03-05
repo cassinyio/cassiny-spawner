@@ -11,7 +11,6 @@ from datetime import datetime
 from uuid import uuid4
 
 import aiohttp
-import aiohttp_jinja2
 from aiohttp.web import json_response
 from sqlalchemy.sql import and_, func, or_, select
 

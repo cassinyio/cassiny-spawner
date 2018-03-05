@@ -26,14 +26,14 @@ patch('utils.quota._get_limits', _get_limits).start()
 
 
 async def test_get_jobs(cli):
-    resp = await cli.get('/spawner/jobs')
+    resp = await cli.get('/api/spawner/jobs')
     assert resp.status == 200
     data = await resp.json()
     assert data['jobs'] == []
 
 
 async def test_post_jobs_error(cli):
-    resp = await cli.post('/spawner/jobs', json={})
+    resp = await cli.post('/api/spawner/jobs', json={})
     assert resp.status == 400
     data = await resp.json()
     assert data["error"]
@@ -48,7 +48,7 @@ async def test_post_jobs(cli):
         'preemptible': False,
         'gpu': False
     }
-    resp = await cli.post('/spawner/jobs', json=body)
+    resp = await cli.post('/api/spawner/jobs', json=body)
     assert resp.status == 200
     data = await resp.json()
     assert data["message"]
