@@ -5,5 +5,5 @@ aiopg==0.13.2
 psycopg2==2.7.4
 PyJWT==1.6.0
 rampante==0.0.14
-SQLAlchemy==1.2.4
+SQLAlchemy==1.2.5
 marshmallow==2.15.0
