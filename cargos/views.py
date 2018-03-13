@@ -15,12 +15,7 @@ from rampante import streaming
 from cargos.models import get_cargos, mCargo
 from cargos.serializers import CargoSchema
 from spawner import Spawner
-from utils import (
-    WebView,
-    check_quota,
-    get_uuid,
-    verify_token,
-)
+from utils import WebView, get_uuid, verify_token
 
 log = logging.getLogger(__name__)
 
@@ -42,7 +37,6 @@ class Cargo(WebView):
         return json_response({"cargos": data})
 
     @verify_token
-    @check_quota(mCargo)
     async def post(self, payload: Mapping[str, Any]):
         """Create a new cargo."""
         user_id = payload['user_id']

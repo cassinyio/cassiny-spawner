@@ -15,12 +15,7 @@ from blueprints.models import join_blueprints_with
 from probes.models import delete_probe, mProbe
 from probes.serializers import ProbeSchema
 from spawner import Spawner
-from utils import (
-    WebView,
-    check_quota,
-    get_uuid,
-    verify_token,
-)
+from utils import WebView, get_uuid, verify_token
 
 log = logging.getLogger(__name__)
 
@@ -47,7 +42,6 @@ class Probe(WebView):
         return json_response({"probes": data})
 
     @verify_token
-    @check_quota(mProbe)
     async def post(self, payload: type_payload):
         """Create new probes."""
         user_id = payload["user_id"]

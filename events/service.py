@@ -1,5 +1,6 @@
 import logging
 import re
+from contextlib import contextmanager
 from typing import Mapping, Optional
 
 import msgpack
@@ -14,22 +15,14 @@ TOPIC_NAME = 'user.notification'
 REGEX = re.compile('([a-z]+)-[a-z]+-[0-9]{4}$')
 
 
-class validate_docker_event:
-    def __init__(self, event: Mapping) -> None:
-        self.event = event
-
-    def __enter__(self):
-        if is_container_event(self.event):
-
-            dockerlog = DockerEvent().from_event(event=self.event)
-
-            if dockerlog.user_id and dockerlog.service_type is not None:
-                return log
-
-            return None
-
-    def __exit__(self, exc_type, exc, tb):
-        log.info('exiting context')
+@contextmanager
+def validate_docker_event(event: Mapping):
+    if is_container_event(event):
+        dockerlog = DockerEvent().from_event(event=event)
+        if dockerlog.user_id and dockerlog.service_type is not None:
+            yield dockerlog
+        else:
+            yield False
 
 
 def is_container_event(event: Mapping) -> bool:

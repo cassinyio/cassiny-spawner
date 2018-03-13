@@ -15,12 +15,7 @@ from apis.models import delete_api, mApi
 from apis.serializers import APIs as ApiSchema
 from blueprints.models import join_blueprints_with
 from spawner import Spawner
-from utils import (
-    WebView,
-    check_quota,
-    get_uuid,
-    verify_token,
-)
+from utils import WebView, get_uuid, verify_token
 
 log = logging.getLogger(__name__)
 
@@ -45,7 +40,6 @@ class APIs(WebView):
         return json_response({"apis": data})
 
     @verify_token
-    @check_quota(mApi)
     async def post(self, payload: Mapping[str, Any]):
         """Create a new API."""
         user_id = payload['user_id']

@@ -42,21 +42,23 @@ async def docker_listener(app):
 
             with validate_docker_event(event) as dockerlog:
 
-                log.info(dockerlog.to_dict())
+                if dockerlog:
 
-                model = MODEL_TYPE[dockerlog.service_type]
+                    log.info(dockerlog.to_dict())
 
-                try:
-                    await add_log(app['db'], dockerlog)
-                except IntegrityError:
-                    # The paig log uuid and action is already inside the db
-                    log.warning(f"Log ID ({dockerlog.uuid}) with action ({dockerlog.action}) is already inside the db, skipping.")
-                else:
-                    await update_service_status(app['db'], model, dockerlog)
+                    model = MODEL_TYPE[dockerlog.service_type]
 
-                message = prepare_message(dockerlog)
-                if message:
-                    await streaming.publish(TOPIC_NAME, message)
+                    try:
+                        await add_log(app['db'], dockerlog)
+                    except IntegrityError:
+                        # The paig log uuid and action is already inside the db
+                        log.warning(f"Log ID ({dockerlog.uuid}) with action ({dockerlog.action}) is already inside the db, skipping.")
+                    else:
+                        await update_service_status(app['db'], model, dockerlog)
+
+                    message = prepare_message(dockerlog)
+                    if message:
+                        await streaming.publish(TOPIC_NAME, message)
 
     except asyncio.CancelledError:
         log.info("Shutting down docker watcher....")
