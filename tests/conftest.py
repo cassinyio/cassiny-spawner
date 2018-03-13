@@ -16,24 +16,25 @@ from sqlalchemy_utils.functions import (
     drop_database,
 )
 
-from apis import routes as api_routes
 from apis import mApi
+from apis import routes as api_routes
 from app import (
     add_route,
     start_task_manager,
     stop_db_pool,
     stop_task_manager,
 )
-from blueprints import routes as blueprint_routes
 from blueprints import mBlueprint
-from cargos import routes as cargo_routes
+from blueprints import routes as blueprint_routes
 from cargos import mCargo, mUser_cargos
+from cargos import routes as cargo_routes
 from config import Config as C
 from events import mLog
-from jobs import routes as job_routes
 from jobs import mJob
-from probes import routes as probe_routes
+from jobs import routes as job_routes
 from probes import mProbe, mUser_probes
+from probes import routes as probe_routes
+from tests.fixtures import _validate_token
 
 logging.config.dictConfig(C.DEFAULT_LOGGING)
 log = logging.getLogger(__name__)
@@ -136,3 +137,11 @@ def cli(loop, test_client, create_tables):
     app.on_cleanup.append(stop_task_manager)
     app.on_cleanup.append(stop_db_pool)
     return loop.run_until_complete(test_client(app))
+
+
+@pytest.fixture
+def valid_token(monkeypatch):
+    """Patch `utils.auth._validate_token` passing fake token."""
+    monkeypatch.setattr('utils.auth._validate_token', _validate_token)
+    yield
+    monkeypatch.undo()

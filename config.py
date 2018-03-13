@@ -58,10 +58,6 @@ class Config():
     API_DEFAULT_URL = "http://0.0.0.0:8080"
     CARGO_DEFAULT_URL = "http://0.0.0.0:9000"
 
-    # QUOTA SERVICE
-    QUOTA_IS_ACTIVE = False
-    QUOTA_URI = 'http://cassiny-billing:8080/billing/quota'
-
     # LOGGING CONFIGURATION
     DEFAULT_LOGGING = {
         "version": 1,

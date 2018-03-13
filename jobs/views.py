@@ -15,12 +15,7 @@ from blueprints.models import join_blueprints_with
 from jobs.models import delete_job, mJob
 from jobs.serializers import JobSchema
 from spawner import Spawner
-from utils import (
-    WebView,
-    check_quota,
-    get_uuid,
-    verify_token,
-)
+from utils import WebView, get_uuid, verify_token
 
 log = logging.getLogger(__name__)
 
@@ -45,7 +40,6 @@ class Jobs(WebView):
         return json_response({"jobs": data})
 
     @verify_token
-    @check_quota(mJob)
     async def post(self, payload: Mapping[str, Any]):
         """Create a new Job."""
         user_id = payload['user_id']

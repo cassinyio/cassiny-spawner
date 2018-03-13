@@ -14,14 +14,14 @@ import aiohttp
 from aiohttp.web import json_response
 from rampante import streaming
 
-from blueprints.models import get_blueprints, mBlueprint
+from blueprints.models import get_blueprints
 from blueprints.serializers import (
     BlueprintSchema,
     CreateBlueprint,
 )
 from cargos.models import get_cargo
 from config import Config
-from utils import WebView, check_quota, verify_token
+from utils import WebView, verify_token
 
 log = logging.getLogger(__name__)
 
@@ -44,7 +44,6 @@ class Blueprint(WebView):
         return json_response({"blueprints": blueprints})
 
     @verify_token
-    @check_quota(mBlueprint)
     async def post(self, payload):
         """Create blueprints."""
         user_id = payload["user_id"]
