@@ -139,9 +139,9 @@ def cli(loop, test_client, create_tables):
     return loop.run_until_complete(test_client(app))
 
 
-@pytest.fixture()
-def valid_token():
+@pytest.fixture
+def valid_token(monkeypatch):
     """Patch `utils.auth._validate_token` passing fake token."""
-    pytest.monkeypatch.setattr('utils.auth._validate_token', _validate_token)
+    monkeypatch.setattr('utils.auth._validate_token', _validate_token)
     yield
-    pytest.monkeypatch.setattr.undo()
+    monkeypatch.setattr.undo()
