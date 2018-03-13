@@ -144,4 +144,4 @@ def valid_token(monkeypatch):
     """Patch `utils.auth._validate_token` passing fake token."""
     monkeypatch.setattr('utils.auth._validate_token', _validate_token)
     yield
-    monkeypatch.setattr.undo()
+    monkeypatch.undo()
