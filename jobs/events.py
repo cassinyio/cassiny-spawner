@@ -15,16 +15,15 @@ log = logging.getLogger(__name__)
 @subscribe_on("service.job.create")
 async def create_job(queue, event, app):
     """Create a new job."""
-    log.info(f"{event['uuid']}: {event}")
-
     user_id = event["user_id"]
     job = event["data"]
+    uuid = event["uuid"]
 
-    blueprint = await get_blueprint(app['db'], blueprint_uuid=job['blueprint'], user_id=user_id)
+    blueprint = await get_blueprint(app['db'], blueprint_ref=job['blueprint'], user_id=user_id)
 
     if blueprint is None:
         log.info(
-            f"{event['uuid']}: blueprint `{job['blueprint_id']}` not found")
+            f"{uuid}: blueprint `{job['blueprint_id']}` not found")
 
         event = {
             "user_id": user_id,
@@ -35,11 +34,12 @@ async def create_job(queue, event, app):
         }
 
         await streaming.publish("user.notification", event)
+        return
 
     name = naminator("job")
 
     specs = {
-        'uuid': event['uuid'],
+        'uuid': uuid,
         'repository': blueprint.repository,
         'blueprint': f"{blueprint.name}:{blueprint.tag}",
         'networks': ["cassiny-public"],
@@ -50,9 +50,9 @@ async def create_job(queue, event, app):
     }
 
     query = mJob.insert().values(
-        uuid=event['uuid'],
+        uuid=uuid,
         user_id=user_id,
-        blueprint_id=blueprint.id,
+        blueprint_uuid=blueprint.uuid,
         name=name,
         description=job['description'],
         specs=specs,
@@ -67,7 +67,7 @@ async def create_job(queue, event, app):
 
     if not service:
         log.error(
-            f"{event['uuid']}: blueprint `{job['blueprint_id']}` not found")
+            f"{uuid}: blueprint `{job['blueprint_id']}` not found")
         event = {
             "user_id": user_id,
             "message": {
@@ -77,14 +77,16 @@ async def create_job(queue, event, app):
         }
 
         await streaming.publish("user.notification", event)
+        return
 
     event = {
         "user_id": user_id,
+        "uuid": uuid,
         "message": {
             "status": "error",
             "message": "",  # TODO put a message here
         }
     }
 
-    log.info(f"{event['uuid']}: service.job.completed.")
+    log.info(f"{uuid}: service.job.completed.")
     await streaming.publish("user.notification", event)

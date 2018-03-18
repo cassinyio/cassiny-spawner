@@ -8,8 +8,7 @@ All rights reserved.
 from events.views import Events, Logs
 
 routes = (
-    # Auth
-    ('*', '/events', Events),
-    ('*', '/logs/{service-id}', Logs),
-
+    # Events
+    ('*', '/api/spawner/events', Events),
+    ('GET', '/api/spawner/logs/{service_id}', Logs),
 )

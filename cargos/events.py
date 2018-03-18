@@ -15,8 +15,7 @@ log = logging.getLogger(__name__)
 @subscribe_on("service.cargo.create")
 async def create_cargo(queue, event, app):
     """Create a new cargo."""
-    log.info(f"Event: {event}")
-
+    uuid = event['uuid']
     user_id = event["user_id"]
     cargo = event["data"]
 
@@ -24,7 +23,7 @@ async def create_cargo(queue, event, app):
     secret_key = token_urlsafe(30)
 
     specs = {
-        "uuid": event['uuid'],
+        "uuid": uuid,
         "access_key": access_key,
         "secret_key": secret_key,
         "description": cargo['description'],
@@ -36,7 +35,7 @@ async def create_cargo(queue, event, app):
     name = naminator("cargo")
 
     query = mCargo.insert().values(
-        uuid=event['uuid'],
+        uuid=uuid,
         user_id=user_id,
         name=name,
         specs=specs,
@@ -53,7 +52,7 @@ async def create_cargo(queue, event, app):
 
     if not service:
         log.error(
-            f"{event['uuid']}: blueprint `{cargo['blueprint_id']}` not found")
+            f"{uuid}: cargo creation failed")
         event = {
             "user_id": user_id,
             "message": {
@@ -63,8 +62,10 @@ async def create_cargo(queue, event, app):
         }
 
         await streaming.publish("user.notification", event)
+        return
 
     event = {
+        "uuid": uuid,
         "user_id": user_id,
         "message": {
             "status": "error",
@@ -72,5 +73,5 @@ async def create_cargo(queue, event, app):
         }
     }
 
-    log.info(f"{event['uuid']}: service.api.completed.")
+    log.info(f"{uuid}: service.api.completed.")
     await streaming.publish("user.notification", event)

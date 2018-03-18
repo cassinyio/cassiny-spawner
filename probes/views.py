@@ -58,15 +58,14 @@ class Probe(WebView):
         }
 
         await streaming.publish("service.probe.create", event)
-        log.info(f"{event['uuid']}: {event}")
 
-        return json_response({"message": "We are creating your Job."})
+        return json_response({"message": "We are creating your probe."})
 
     @verify_token
     async def delete(self, payload: type_payload):
         """Delete probes."""
-        probe_ref = self.request.match_info.get("probe_ref")
         user_id = payload['user_id']
+        probe_ref = self.request.match_info.get("probe_ref")
 
         deleted_probe = await delete_probe(self.db, probe_ref=probe_ref, user_id=user_id)
 

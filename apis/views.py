@@ -81,4 +81,4 @@ class APIs(WebView):
         }
         await streaming.publish("service.api.deleted", event)
         user_message = f"We are removing {deleted_api.name}"
-        return json_response({"error": user_message})
+        return json_response({"message": user_message})

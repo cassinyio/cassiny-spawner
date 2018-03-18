@@ -5,6 +5,8 @@ Blueprints models.
 All rights reserved.
 """
 
+import uuid
+
 from sqlalchemy import (
     Boolean,
     Column,
@@ -40,6 +42,7 @@ async def join_blueprints_with(model, user_id: str, db):
         model,
         mBlueprint.c.name.label("blueprint_name"),
         mBlueprint.c.repository.label("blueprint_repository"),
+        mBlueprint.c.tag.label("blueprint_tag"),
     ])\
         .where(model.c.user_id == user_id)\
         .select_from(
@@ -63,14 +66,52 @@ async def get_blueprints(db, user_id: str):
     return rows
 
 
-async def get_blueprint(db, blueprint_uuid: str, user_id: str):
-    query = mBlueprint.select().where(
-        (mBlueprint.c.uuid == blueprint_uuid) &
-        (
-            (mBlueprint.c.user_id == user_id) |
-            (mBlueprint.c.public.is_(True))
+async def get_blueprint(db, blueprint_ref: str, user_id: str):
+    try:
+        uuid.UUID(blueprint_ref)
+    except ValueError:
+        # blueprint_ref is not a uuid
+        blueprint_data = blueprint_ref.split("/")
+        tag = "latest"
+
+        if len(blueprint_data) == 2:
+            repository, name = blueprint_data
+
+            name_data = name.split(":")
+            if len(name_data) == 2:
+                name, tag = name_data
+
+        elif len(blueprint_data) == 3:
+            repository = "/".join(blueprint_data[:2])
+            name = blueprint_data[-1]
+
+            name_data = name.split(":")
+            if len(name_data) == 2:
+                name, tag = name_data
+
+        else:
+            return None
+
+        query = mBlueprint.select().where(
+            (
+                (mBlueprint.c.repository == repository) &
+                (mBlueprint.c.name == name) &
+                (mBlueprint.c.tag == tag)
+            ) &
+            (
+                (mBlueprint.c.user_id == user_id) |
+                (mBlueprint.c.public.is_(True))
+            )
         )
-    )
+    else:
+        query = mBlueprint.select().where(
+            (mBlueprint.c.uuid == blueprint_ref) &
+            (
+                (mBlueprint.c.user_id == user_id) |
+                (mBlueprint.c.public.is_(True))
+            )
+        )
+
     async with db.acquire() as conn:
         result = await conn.execute(query)
         row = await result.fetchone()

@@ -50,9 +50,13 @@ class Logs(WebView):
 
     @verify_token
     async def get(self, payload):
-        is_owner = 0
+        user_id = payload["user_id"]
+        service_name = self.request.match_info.get("service_id")
+
+        is_owner = True
+
         if is_owner:
-            logs = self.docker.service.logs("service_name")
+            logs = await self.request.app['docker'].services.logs(service_name, stdout=True, stderr=True)
             return json_response({"logs": logs})
 
         return json_response({"logs": logs})

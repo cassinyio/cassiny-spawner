@@ -44,14 +44,14 @@ async def docker_listener(app):
 
                 if dockerlog:
 
-                    log.info(dockerlog.to_dict())
+                    log.info(f"Log: {dockerlog.to_dict()}")
 
                     model = MODEL_TYPE[dockerlog.service_type]
 
                     try:
                         await add_log(app['db'], dockerlog)
                     except IntegrityError:
-                        # The paig log uuid and action is already inside the db
+                        # the log uuid and action is already inside the db
                         log.warning(f"Log ID ({dockerlog.uuid}) with action ({dockerlog.action}) is already inside the db, skipping.")
                     else:
                         await update_service_status(app['db'], model, dockerlog)

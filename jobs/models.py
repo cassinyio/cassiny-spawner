@@ -5,6 +5,8 @@ Jobs models.
 All rights reserved.
 """
 
+import uuid
+
 from sqlalchemy import (
     Column,
     DateTime,
@@ -36,14 +38,20 @@ mJob = Table(
 
 async def delete_job(db, job_ref: str, user_id: str):
     """Remove a job from the database."""
-    query = mJob.delete().where(
-        (
-            mJob.c.user_id == user_id) &
-        (
-            mJob.c.uuid == job_ref |
-            mJob.c.name == job_ref
+    try:
+        uuid.UUID(job_ref)
+    except ValueError:
+        query = mJob.delete()\
+            .where(
+            (mJob.c.user_id == user_id) &
+            (mJob.c.name == job_ref)
         )
-    )
+    else:
+        query = mJob.delete()\
+            .where(
+            (mJob.c.user_id == user_id) &
+            (mJob.c.uuid == job_ref)
+        )
     async with db.acquire() as conn:
         result = await conn.execute(query.returning(mJob.c.name))
         row = await result.fetchone()

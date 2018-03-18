@@ -5,6 +5,8 @@ Probes models.
 All rights reserved.
 """
 
+import uuid
+
 from sqlalchemy import (
     Column,
     DateTime,
@@ -48,14 +50,20 @@ mUser_probes = Table(
 
 async def delete_probe(db, probe_ref: str, user_id: str):
     """Remove a probe from the database."""
-    query = mProbe.delete().where(
-        (
-            mProbe.c.user_id == user_id) &
-        (
-            mProbe.c.uuid == probe_ref |
-            mProbe.c.name == probe_ref
+    try:
+        uuid.UUID(probe_ref)
+    except ValueError:
+        query = mProbe.delete()\
+            .where(
+            (mProbe.c.user_id == user_id) &
+            (mProbe.c.name == probe_ref)
         )
-    )
+    else:
+        query = mProbe.delete()\
+            .where(
+            (mProbe.c.user_id == user_id) &
+            (mProbe.c.uuid == probe_ref)
+        )
     async with db.acquire() as conn:
         result = await conn.execute(query.returning(mProbe.c.name))
         row = await result.fetchone()

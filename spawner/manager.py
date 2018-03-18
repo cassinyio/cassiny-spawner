@@ -123,7 +123,8 @@ class ServiceManager:
             constraint = "node.labels.type == storage"
             placement.append(constraint)
         else:
-            placement.append(f"node.hostname == {name}")
+            pass
+            #placement.append(f"node.hostname == {name}")
 
         if specs.get('gpu', False):
             placement.append("node.labels.gpu == true")
@@ -143,11 +144,11 @@ class ServiceManager:
             networks = specs['networks']
 
         # Pass the user_id to the service, the key has to be a string!
-        # log_uuid is used to define this service as unique
+        # uuid is used to define this service as unique
         # container_spec are != from service spec
         container_spec["Labels"] = {
             "user_id": str(user_id),
-            "log_uuid": specs['uuid'],
+            "uuid": specs['uuid'],
         }
 
         # command is used when an entrypoint
@@ -195,7 +196,7 @@ class ServiceManager:
             "Name": "fluentd",
             "Options": {
                 "fluentd-async-connect": "true",
-                "labels": "com.docker.swarm.service.name,user_id,log_uuid"
+                "labels": "com.docker.swarm.service.name,user_id,uuid"
             }
         }
         '''
