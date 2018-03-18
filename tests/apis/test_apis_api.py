@@ -16,7 +16,7 @@ async def test_post_apis(cli, valid_token):
     body = {
         'blueprint': "2a83d4be0f7011e89e4b35694e577c22",
         'description': "This is a test",
-        'machine_type': "mega",
+        'machine_type': "medium",
         'command': "python app.py 0.0.0.0:8080",
         'preemptible': False,
         'gpu': False
