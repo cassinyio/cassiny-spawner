@@ -8,8 +8,8 @@ All rights reserved.
 from cargos.views import Cargo
 
 routes = (
-    ('GET', '/api/spawner/cargos/{cargo_id}', Cargo),
+    ('GET', '/api/spawner/cargos/{cargo_ref}', Cargo),
     ('GET', '/api/spawner/cargos', Cargo),
     ('POST', '/api/spawner/cargos', Cargo),
-    ('DELETE', '/api/spawner/cargos/{cargo_id}', Cargo),
+    ('DELETE', '/api/spawner/cargos/{cargo_ref}', Cargo),
 )

@@ -6,8 +6,9 @@ All rights reserved.
 """
 
 from marshmallow import Schema, fields, post_dump
+from marshmallow.validate import OneOf
 
-from config import Config as C
+from config import Config, Status
 
 
 class APIs(Schema):
@@ -16,7 +17,7 @@ class APIs(Schema):
     # required fields
     description = fields.Str(required=True, allow_none=False)
     blueprint = fields.Str(required=True)
-    machine_type = fields.Str(required=True)
+    machine_type = fields.Str(required=True, validate=OneOf(Config.MACHINES))
     command = fields.Str(required=True, allow_none=False)
     gpu = fields.Bool(required=True, allow_none=False)
     preemptible = fields.Bool(required=True, allow_none=False)
@@ -35,8 +36,8 @@ class APIs(Schema):
 
     @post_dump
     def translate_status(self, data):
-        data['status'] = C.STATUS[data['status']]
+        data['status'] = Status(data['status']).name
 
     @post_dump
     def url(self, data):
-        data['url'] = C.APPS_PUBLIC_URL.format(subdomain=data['name'])
+        data['url'] = Config.APPS_PUBLIC_URL.format(subdomain=data['name'])

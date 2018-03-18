@@ -21,6 +21,7 @@ from blueprints import routes as blueprint_routes
 from cargos import routes as cargo_routes
 from config import Config as C
 from events import docker_listener
+from events import routes as event_routes
 from jobs import routes as job_routes
 from probes import routes as probe_routes
 
@@ -102,6 +103,7 @@ if __name__ == '__main__':
         *job_routes,
         *probe_routes,
         *cargo_routes,
+        *event_routes,
     )
 
     # On-startup tasks

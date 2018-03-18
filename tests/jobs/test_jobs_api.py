@@ -16,7 +16,7 @@ async def test_post_jobs(cli, valid_token):
     body = {
         'blueprint': "2a83d4be-0f70-11e8-9e4b-35694e577c22",
         'description': "This is a test",
-        'machine_type': "mega",
+        'machine_type': "medium",
         'command': "python -c 'print (1)'",
         'preemptible': False,
         'gpu': False

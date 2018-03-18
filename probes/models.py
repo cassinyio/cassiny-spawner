@@ -5,6 +5,8 @@ Probes models.
 All rights reserved.
 """
 
+import uuid
+
 from sqlalchemy import (
     Column,
     DateTime,
@@ -15,7 +17,7 @@ from sqlalchemy import (
     Unicode,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
-from sqlalchemy.sql import func
+from sqlalchemy.sql import func, select
 
 from factory import metadata
 
@@ -48,15 +50,45 @@ mUser_probes = Table(
 
 async def delete_probe(db, probe_ref: str, user_id: str):
     """Remove a probe from the database."""
-    query = mProbe.delete().where(
-        (
-            mProbe.c.user_id == user_id) &
-        (
-            mProbe.c.uuid == probe_ref |
-            mProbe.c.name == probe_ref
+    try:
+        uuid.UUID(probe_ref)
+    except ValueError:
+        query = mProbe.delete()\
+            .where(
+            (mProbe.c.user_id == user_id) &
+            (mProbe.c.name == probe_ref)
         )
-    )
+    else:
+        query = mProbe.delete()\
+            .where(
+            (mProbe.c.user_id == user_id) &
+            (mProbe.c.uuid == probe_ref)
+        )
     async with db.acquire() as conn:
         result = await conn.execute(query.returning(mProbe.c.name))
+        row = await result.fetchone()
+    return row
+
+
+async def select_probe(db, probe_ref: str, user_id: str):
+    """Select an probe from the database."""
+    try:
+        uuid.UUID(probe_ref)
+    except ValueError:
+        query = select([
+            mProbe
+        ]).where(
+            (mProbe.c.user_id == user_id) &
+            (mProbe.c.name == probe_ref)
+        )
+    else:
+        query = select([
+            mProbe
+        ]).where(
+            (mProbe.c.user_id == user_id) &
+            (mProbe.c.uuid == probe_ref)
+        )
+    async with db.acquire() as conn:
+        result = await conn.execute(query)
         row = await result.fetchone()
     return row

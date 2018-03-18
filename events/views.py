@@ -43,16 +43,3 @@ class Events(WebView):
         data, errors = log_schema.dump(logs)
 
         return json_response({"logs": data})
-
-
-class Logs(WebView):
-    """Views to get Logs."""
-
-    @verify_token
-    async def get(self, payload):
-        is_owner = 0
-        if is_owner:
-            logs = self.docker.service.logs("service_name")
-            return json_response({"logs": logs})
-
-        return json_response({"logs": logs})

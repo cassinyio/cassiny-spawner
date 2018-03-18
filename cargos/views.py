@@ -12,7 +12,7 @@ from typing import Any, Mapping
 from aiohttp.web import json_response
 from rampante import streaming
 
-from cargos.models import get_cargos, mCargo
+from cargos.models import delete_cargo, get_cargos
 from cargos.serializers import CargoSchema
 from spawner import Spawner
 from utils import WebView, get_uuid, verify_token
@@ -53,31 +53,20 @@ class Cargo(WebView):
             "data": data
         }
 
-        await streaming.publish("service.probe.create", event)
-        log.info(f"{event['uuid']}: {event}")
+        await streaming.publish("service.cargo.create", event)
 
-        return json_response({"message": "We are creating your Job."})
+        return json_response({"message": "We are creating your cargo."})
 
     @verify_token
     async def delete(self, payload: Mapping[str, Any]):
         """Delete a cargo."""
         user_id = payload["user_id"]
-        cargo_uuid = self.request.match_info.get("cargo_uuid")
+        cargo_ref = self.request.match_info.get("cargo_ref")
 
-        query = mCargo.delete()\
-            .where(
-            (
-                mCargo.c.user_id == user_id) &
-                (
-                    mCargo.c.uuid == cargo_uuid |
-                    mCargo.c.name == cargo_uuid
-            )
-        )
-
-        deleted_cargo = await self.query_db(query.returning(mCargo.c.name))
+        deleted_cargo = await delete_cargo(db=self.db, cargo_ref=cargo_ref, user_id=user_id)
 
         if deleted_cargo is None:
-            log.info(f"Cargo doesn't exist inside the database: {cargo_uuid}")
+            log.info(f"Cargo doesn't exist inside the database: {cargo_ref}")
             error = "That cargo doesn't exist anymore."
             return json_response({"error": error}, status=400)
 

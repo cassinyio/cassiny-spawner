@@ -1,6 +1,5 @@
 import logging
 import re
-from contextlib import contextmanager
 from typing import Mapping, Optional
 
 import msgpack
@@ -15,14 +14,19 @@ TOPIC_NAME = 'user.notification'
 REGEX = re.compile('([a-z]+)-[a-z]+-[0-9]{4}$')
 
 
-@contextmanager
-def validate_docker_event(event: Mapping):
-    if is_container_event(event):
-        dockerlog = DockerEvent().from_event(event=event)
-        if dockerlog.user_id and dockerlog.service_type is not None:
-            yield dockerlog
-        else:
-            yield False
+class validate_docker_event:
+    def __init__(self, event: Mapping) -> None:
+        self.event = event
+
+    def __enter__(self):
+        if is_container_event(self.event):
+            dockerlog = DockerEvent().from_event(event=self.event)
+            if dockerlog.user_id and dockerlog.service_type is not None:
+                return dockerlog
+        return False
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        pass
 
 
 def is_container_event(event: Mapping) -> bool:
@@ -41,7 +45,7 @@ def get_service_type(name: str) -> Optional[str]:
         return None
 
 
-def get_service_status(service_type, action):
+def get_service_status(service_type: str, action: str, exit_code: str):
     """Return `False` or the current status for a service."""
     if service_type in ("probe", "cargo", "api"):
         if action == 'start':
@@ -53,6 +57,8 @@ def get_service_status(service_type, action):
         if action == 'start':
             return Status.Running
         if action == 'die':
+            if exit_code == '1':
+                return Status.Failed
             return Status.Completed
 
     return False
@@ -90,8 +96,12 @@ class DockerEvent():
         "time",
         "name",
         "user_id",
+        "service_type",
+        "uuid",
         "exit_code",
     ))
+
+    # Attributes we want to take from the docker event
     _attributes = frozenset((
         "com.docker.swarm.service.name",
         "user_id",
@@ -107,6 +117,7 @@ class DockerEvent():
         self.uuid = None
         self.name = None
         self.user_id = None
+        self.exit_code = None
         self.service_type: str = None
 
     def from_event(self, *, event: Mapping):
@@ -129,7 +140,7 @@ class DockerEvent():
                 self.__dict__['name'] = event_attrs[key]
             elif key == 'user_id':
                 self.__dict__[key] = int(event_attrs[key])
-            elif key == 'log_uuid':
+            elif key == 'uuid':
                 self.__dict__[key] = event_attrs[key]
 
     def to_dict(self):
@@ -148,7 +159,7 @@ async def add_log(db, log) -> None:
     query = mLog.insert().values(
         uuid=log.uuid,
         log_type=log.type,
-        service_type=log,
+        service_type=log.service_type,
         name=log.name,
         action=log.action,
         user_id=log.user_id
@@ -157,8 +168,8 @@ async def add_log(db, log) -> None:
 
 
 async def update_service_status(db, model, log: DockerEvent) -> None:
-    """Update status for an event."""
-    status = get_service_status(log.service_type, log.action)
+    """Update status for a docker event."""
+    status = get_service_status(log.service_type, log.action, log.exit_code)
 
     if status:
         query = model.update()\

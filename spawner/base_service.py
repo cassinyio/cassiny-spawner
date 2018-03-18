@@ -16,3 +16,8 @@ class BaseService():
         """Delete a service."""
         response = await self._spawner.remove(name=name)
         return response
+
+    async def logs(self, name: str, stdout=True, stderr=True):
+        """Get log of a service."""
+        response = await self._spawner.logs(name=name, stdout=True, stderr=True)
+        return response

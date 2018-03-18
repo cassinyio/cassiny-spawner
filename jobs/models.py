@@ -5,6 +5,8 @@ Jobs models.
 All rights reserved.
 """
 
+import uuid
+
 from sqlalchemy import (
     Column,
     DateTime,
@@ -15,7 +17,7 @@ from sqlalchemy import (
     Unicode,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
-from sqlalchemy.sql import func
+from sqlalchemy.sql import func, select
 
 from factory import metadata
 
@@ -36,15 +38,45 @@ mJob = Table(
 
 async def delete_job(db, job_ref: str, user_id: str):
     """Remove a job from the database."""
-    query = mJob.delete().where(
-        (
-            mJob.c.user_id == user_id) &
-        (
-            mJob.c.uuid == job_ref |
-            mJob.c.name == job_ref
+    try:
+        uuid.UUID(job_ref)
+    except ValueError:
+        query = mJob.delete()\
+            .where(
+            (mJob.c.user_id == user_id) &
+            (mJob.c.name == job_ref)
         )
-    )
+    else:
+        query = mJob.delete()\
+            .where(
+            (mJob.c.user_id == user_id) &
+            (mJob.c.uuid == job_ref)
+        )
     async with db.acquire() as conn:
         result = await conn.execute(query.returning(mJob.c.name))
+        row = await result.fetchone()
+    return row
+
+
+async def select_job(db, job_ref: str, user_id: str):
+    """Select an api from the database."""
+    try:
+        uuid.UUID(job_ref)
+    except ValueError:
+        query = select([
+            mJob
+        ]).where(
+            (mJob.c.user_id == user_id) &
+            (mJob.c.name == job_ref)
+        )
+    else:
+        query = select([
+            mJob
+        ]).where(
+            (mJob.c.user_id == user_id) &
+            (mJob.c.uuid == job_ref)
+        )
+    async with db.acquire() as conn:
+        result = await conn.execute(query)
         row = await result.fetchone()
     return row

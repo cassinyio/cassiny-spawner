@@ -5,3 +5,4 @@ pytest==3.4.2
 pytest-aiohttp==0.3.0
 pytest-cov==2.5.1
 SQLAlchemy-Utils==0.33.0
+codecov==2.0.15

@@ -7,8 +7,9 @@ All rights reserved.
 
 
 from marshmallow import Schema, fields, post_dump
+from marshmallow.validate import OneOf
 
-from config import Config as C
+from config import Config, Status
 
 
 class ProbeSchema(Schema):
@@ -17,7 +18,9 @@ class ProbeSchema(Schema):
     # required fields
     description = fields.Str(required=True, allow_none=False)
     blueprint = fields.Str(required=True)
-    machine_type = fields.Str(required=True)
+    machine_type = fields.Str(required=True, validate=OneOf(Config.MACHINES))
+    gpu = fields.Bool(required=True, allow_none=False)
+    preemptible = fields.Bool(required=True, allow_none=False)
 
     # export only
     id = fields.Int(dump_only=True)
@@ -27,6 +30,7 @@ class ProbeSchema(Schema):
     user_id = fields.Int(dump_only=True)
     blueprint_name = fields.Str(dump_only=True)
     blueprint_repository = fields.Str(dump_only=True)
+    blueprint_tag = fields.Str(dump_only=True)
     status = fields.Int(dump_only=True)
     specs = fields.Raw()
 
@@ -37,7 +41,7 @@ class ProbeSchema(Schema):
 
     @post_dump
     def translate_status(self, data):
-        data['status'] = C.STATUS[data['status']]
+        data['status'] = Status(data['status']).name
 
     @post_dump
     def create_blueprint_name(self, data):
@@ -48,4 +52,4 @@ class ProbeSchema(Schema):
 
     @post_dump
     def url(self, data):
-        data['url'] = C.APPS_PUBLIC_URL.format(subdomain=data['name'])
+        data['url'] = Config.APPS_PUBLIC_URL.format(subdomain=data['name'])

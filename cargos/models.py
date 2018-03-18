@@ -5,6 +5,8 @@ Cargos models.
 All rights reserved.
 """
 
+import uuid
+
 from sqlalchemy import (
     Column,
     DateTime,
@@ -62,5 +64,29 @@ async def get_cargo(db, cargo_ref: str, user_id: str):
     )
     async with db.acquire() as conn:
         result = await conn.execute(query)
+        row = await result.fetchone()
+    return row
+
+
+async def delete_cargo(db, cargo_ref: str, user_id: str):
+    """Remove a cargo from the database."""
+    # check if cargo_uuid is a valid uuid
+    # if not we consider it a name
+    try:
+        uuid.UUID(cargo_ref)
+    except ValueError:
+        query = mCargo.delete()\
+            .where(
+            (mCargo.c.user_id == user_id) &
+            (mCargo.c.name == cargo_ref)
+        )
+    else:
+        query = mCargo.delete()\
+            .where(
+            (mCargo.c.user_id == user_id) &
+            (mCargo.c.uuid == cargo_ref)
+        )
+    async with db.acquire() as conn:
+        result = await conn.execute(query.returning(mCargo.c.name))
         row = await result.fetchone()
     return row

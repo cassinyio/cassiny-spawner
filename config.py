@@ -16,7 +16,7 @@ class Status(IntEnum):
     Creating = 0
     Running = 1
     Completed = 2
-    Error = 3
+    Failed = 3
     Stopped = 4
 
 
@@ -45,6 +45,9 @@ class Config():
     DB_NAME = os.getenv("DB_NAME", "cassiny")
     DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
     DB_PORT = os.getenv("DB_PORT", 5432)
+
+    # Machines size
+    MACHINES = ("small", "medium", "big")
 
     # APPS #
     # public url to access apps

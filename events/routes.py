@@ -5,11 +5,9 @@ Copyright (c) 2017, Cassiny.io OÜ
 All rights reserved.
 """
 
-from events.views import Events, Logs
+from events.views import Events
 
 routes = (
-    # Auth
-    ('*', '/events', Events),
-    ('*', '/logs/{service-id}', Logs),
-
+    # Events
+    ('*', '/api/spawner/events', Events),
 )

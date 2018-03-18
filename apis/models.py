@@ -5,6 +5,8 @@ Copyright (c) 2017, Cassiny.io OÜ
 All rights reserved.
 """
 
+import uuid
+
 from sqlalchemy import (
     Column,
     DateTime,
@@ -15,7 +17,7 @@ from sqlalchemy import (
     Unicode,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
-from sqlalchemy.sql import func
+from sqlalchemy.sql import func, select
 
 from factory import metadata
 
@@ -38,15 +40,47 @@ mApi = Table(
 
 async def delete_api(db, api_ref: str, user_id: str):
     """Remove an api from the database."""
-    query = mApi.delete().where(
-        (
-            mApi.c.user_id == user_id) &
-        (
-            mApi.c.uuid == api_ref |
-            mApi.c.name == api_ref
+    # check if cargo_uuid is a valid uuid
+    # if not we consider it a name
+    try:
+        uuid.UUID(api_ref)
+    except ValueError:
+        query = mApi.delete()\
+            .where(
+            (mApi.c.user_id == user_id) &
+            (mApi.c.name == api_ref)
         )
-    )
+    else:
+        query = mApi.delete()\
+            .where(
+            (mApi.c.user_id == user_id) &
+            (mApi.c.uuid == api_ref)
+        )
     async with db.acquire() as conn:
         result = await conn.execute(query.returning(mApi.c.name))
+        row = await result.fetchone()
+    return row
+
+
+async def select_api(db, api_ref: str, user_id: str):
+    """Select an api from the database."""
+    try:
+        uuid.UUID(api_ref)
+    except ValueError:
+        query = select([
+            mApi
+        ]).where(
+            (mApi.c.user_id == user_id) &
+            (mApi.c.name == api_ref)
+        )
+    else:
+        query = select([
+            mApi
+        ]).where(
+            (mApi.c.user_id == user_id) &
+            (mApi.c.uuid == api_ref)
+        )
+    async with db.acquire() as conn:
+        result = await conn.execute(query)
         row = await result.fetchone()
     return row

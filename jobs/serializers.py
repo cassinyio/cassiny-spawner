@@ -6,8 +6,9 @@ All rights reserved.
 """
 
 from marshmallow import Schema, fields, post_dump
+from marshmallow.validate import OneOf
 
-from config import Config as C
+from config import Config, Status
 
 
 class JobSchema(Schema):
@@ -16,8 +17,10 @@ class JobSchema(Schema):
     # required fields
     description = fields.Str(required=True, allow_none=False)
     blueprint = fields.Str(required=True)
-    machine_type = fields.Str(required=True, load_only=True)
+    machine_type = fields.Str(required=True, validate=OneOf(Config.MACHINES))
     command = fields.Str(required=True, allow_none=False)
+    gpu = fields.Bool(required=True, allow_none=False)
+    preemptible = fields.Bool(required=True, allow_none=False)
 
     # export only
     id = fields.Int(dump_only=True)
@@ -32,7 +35,7 @@ class JobSchema(Schema):
 
     @post_dump
     def translate_status(self, data):
-        data['status'] = C.STATUS[data['status']]
+        data['status'] = Status(data['status']).name
 
     @post_dump
     def owner(self, data):

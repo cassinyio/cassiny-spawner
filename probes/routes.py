@@ -5,12 +5,13 @@ Probes routes.
 All rights reserved.
 """
 
-from probes.views import Probe
+from probes.views import Logs, Probe
 
 routes = (
     ('GET', '/api/spawner/probes', Probe),
-    ('GET', '/api/spawner/probes/{probe_id}', Probe),
+    ('GET', '/api/spawner/probes/{probe_ref}', Probe),
     ('POST', '/api/spawner/probes', Probe),
-    ('PATCH', '/api/spawner/probes/{probe_id}', Probe),
-    ('DELETE', '/api/spawner/probes/{probe_id}', Probe),
+    ('PATCH', '/api/spawner/probes/{probe_ref}', Probe),
+    ('DELETE', '/api/spawner/probes/{probe_ref}', Probe),
+    ('GET', '/api/spawner/probes/logs/{probe_ref}', Logs),
 )
