@@ -11,7 +11,7 @@ from typing import Any, Mapping
 from aiohttp.web import json_response
 from rampante import streaming
 
-from apis.models import delete_api, mApi
+from apis.models import delete_api, mApi, select_api
 from apis.serializers import APIs as ApiSchema
 from blueprints.models import join_blueprints_with
 from spawner import Spawner
@@ -82,3 +82,21 @@ class APIs(WebView):
         await streaming.publish("service.api.deleted", event)
         user_message = f"We are removing {deleted_api.name}"
         return json_response({"message": user_message})
+
+
+class Logs(WebView):
+    """Views to get API Logs."""
+
+    @verify_token
+    async def get(self, payload):
+        user_id = payload["user_id"]
+        api_ref = self.request.match_info.get("api_ref")
+
+        selected_api = await select_api(db=self.db, api_ref=api_ref, user_id=user_id)
+
+        if selected_api is None:
+            user_message = f"It seems that api doesn't exist anymore."
+            return json_response({"error": user_message}, status=400)
+
+        logs = await Spawner.api.logs(name=selected_api.name)
+        return json_response({"logs": logs})

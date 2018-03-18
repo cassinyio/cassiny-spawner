@@ -17,7 +17,7 @@ from sqlalchemy import (
     Unicode,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
-from sqlalchemy.sql import func
+from sqlalchemy.sql import func, select
 
 from factory import metadata
 
@@ -54,5 +54,29 @@ async def delete_job(db, job_ref: str, user_id: str):
         )
     async with db.acquire() as conn:
         result = await conn.execute(query.returning(mJob.c.name))
+        row = await result.fetchone()
+    return row
+
+
+async def select_job(db, job_ref: str, user_id: str):
+    """Select an api from the database."""
+    try:
+        uuid.UUID(mJob)
+    except ValueError:
+        query = select([
+            mJob
+        ]).where(
+            (mJob.c.user_id == user_id) &
+            (mJob.c.name == job_ref)
+        )
+    else:
+        query = select([
+            mJob
+        ]).where(
+            (mJob.c.user_id == user_id) &
+            (mJob.c.uuid == job_ref)
+        )
+    async with db.acquire() as conn:
+        result = await conn.execute(query)
         row = await result.fetchone()
     return row

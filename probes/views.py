@@ -12,7 +12,7 @@ from aiohttp.web import json_response
 from rampante import streaming
 
 from blueprints.models import join_blueprints_with
-from probes.models import delete_probe, mProbe
+from probes.models import delete_probe, mProbe, select_probe
 from probes.serializers import ProbeSchema
 from spawner import Spawner
 from utils import WebView, get_uuid, verify_token
@@ -81,3 +81,21 @@ class Probe(WebView):
         await streaming.publish("service.probe.deleted", event)
         message = f"Probe {deleted_probe.name} removed."
         return json_response({"message": message})
+
+
+class Logs(WebView):
+    """Views to get API Logs."""
+
+    @verify_token
+    async def get(self, payload):
+        user_id = payload["user_id"]
+        probe_ref = self.request.match_info.get("probe_ref")
+
+        selected_probe = await select_probe(db=self.db, probe_ref=probe_ref, user_id=user_id)
+
+        if selected_probe is None:
+            user_message = f"It seems that probe doesn't exist anymore."
+            return json_response({"error": user_message}, status=400)
+
+        logs = await Spawner.probe.logs(name=selected_probe.name)
+        return json_response({"logs": logs})

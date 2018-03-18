@@ -8,12 +8,11 @@ All rights reserved.
 
 import logging
 from typing import Any, Mapping
-from uuid import UUID
 
 from aiohttp.web import json_response
 from rampante import streaming
 
-from cargos.models import get_cargos, delete_cargo, mCargo
+from cargos.models import delete_cargo, get_cargos
 from cargos.serializers import CargoSchema
 from spawner import Spawner
 from utils import WebView, get_uuid, verify_token

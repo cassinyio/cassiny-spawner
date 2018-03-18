@@ -15,7 +15,7 @@ REGEX = re.compile('([a-z]+)-[a-z]+-[0-9]{4}$')
 
 
 class validate_docker_event:
-    def __init__(self, event: Mapping):
+    def __init__(self, event: Mapping) -> None:
         self.event = event
 
     def __enter__(self):

@@ -5,11 +5,12 @@ Jobs routes.
 All rights reserved.
 """
 
-from jobs.views import Jobs
+from jobs.views import Jobs, Logs
 
 routes = (
     ('GET', '/api/spawner/jobs', Jobs),
     ('POST', '/api/spawner/jobs', Jobs),
     ('PATCH', '/api/spawner/jobs/{job_ref}', Jobs),
-    ('DELETE', '/api/spawner/jobs/{job_ref}', Jobs),
+    ('DELETE', '/api/spawner/jobs/{jobs}', Jobs),
+    ('GET', '/api/spawner/probes/jobs/{jobs}', Logs),
 )

@@ -241,3 +241,8 @@ class ServiceManager:
         log.info(f"Pushing image {name}")
         pushing_image = await self.docker.images.push(name=name, auth=auth)
         return pushing_image
+
+    async def logs(self, name, stdout, stderr):
+        """Return logs of the given service."""
+        logs = await self.docker.services.logs(name, stdout=stdout, stderr=stderr)
+        return logs
