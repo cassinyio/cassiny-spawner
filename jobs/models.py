@@ -61,7 +61,7 @@ async def delete_job(db, job_ref: str, user_id: str):
 async def select_job(db, job_ref: str, user_id: str):
     """Select an api from the database."""
     try:
-        uuid.UUID(mJob)
+        uuid.UUID(job_ref)
     except ValueError:
         query = select([
             mJob
