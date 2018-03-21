@@ -59,7 +59,7 @@ class Probe(WebView):
 
         await streaming.publish("service.probe.create", event)
 
-        return json_response({"message": "We are creating your probe."})
+        return json_response({"message": f"We are creating your probe ({event['uuid']})."})
 
     @verify_token
     async def delete(self, payload: type_payload):

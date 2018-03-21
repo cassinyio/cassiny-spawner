@@ -10,6 +10,9 @@ lint:
 	@flake8 app.py config.py factory.py create_db.py apis blueprints cargos events jobs probes spawner utils tests
 	@mypy app.py config.py factory.py create_db.py apis blueprints cargos events jobs probes spawner utils tests --ignore-missing-imports
 
+isort:
+	@isort -rc -m 3 app.py config.py factory.py create_db.py apis blueprints cargos events jobs probes spawner utils tests
+
 test:
 	@py.test --cov apis --cov blueprints --cov cargos --cov events --cov jobs --cov probes --cov spawner --cov utils --cov tests
 

@@ -57,9 +57,8 @@ class APIs(WebView):
         }
 
         await streaming.publish("service.api.create", event)
-        log.info(f"Published event `service.api.create`: {event}")
 
-        return json_response({"message": "We are creating your API."})
+        return json_response({"message": f"We are creating your api ({event['uuid']})."})
 
     @verify_token
     async def delete(self, payload: Mapping[str, Any]):

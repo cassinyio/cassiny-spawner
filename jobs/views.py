@@ -41,7 +41,7 @@ class Jobs(WebView):
 
     @verify_token
     async def post(self, payload: Mapping[str, Any]):
-        """Create a new Job."""
+        """Create a new job."""
         user_id = payload['user_id']
         data = await self.request.json()
 
@@ -57,9 +57,8 @@ class Jobs(WebView):
         }
 
         await streaming.publish("service.job.create", event)
-        log.info(f"{event['uuid']}: {event}")
 
-        return json_response({"message": "We are creating your Job."})
+        return json_response({"message": f"We are creating your job ({event['uuid']})."})
 
     @verify_token
     async def delete(self, payload: Mapping[str, Any]):

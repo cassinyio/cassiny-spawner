@@ -30,7 +30,7 @@ TOPIC_NAME = 'user.notification'
 
 
 async def docker_listener(app):
-    """Docker events listener."""
+    """Listen on docker events."""
     log.info("docker watcher started")
     subscriber = app['docker'].events.subscribe()
     try:
@@ -44,7 +44,7 @@ async def docker_listener(app):
 
                 if dockerlog:
 
-                    log.info(f"Log: {dockerlog.to_dict()}")
+                    log.info(f"Docker event: {dockerlog.to_dict()}")
 
                     model = MODEL_TYPE[dockerlog.service_type]
 

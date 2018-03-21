@@ -1,14 +1,12 @@
-from events.service import (
-    get_service_status,
-    get_service_type,
-)
+from events import DockerEvent
+from events.service import get_service_status
 from utils import naminator
 
 
 def test_get_service_type():
     service_type = "probe"
     name = naminator(service_type)
-    assert get_service_type(name) == service_type
+    assert DockerEvent().get_service_type(name) == service_type
 
 
 def test_service_status():
