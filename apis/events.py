@@ -4,7 +4,7 @@ import logging
 
 from rampante import streaming, subscribe_on
 
-from apis.models import mApi
+from apis.models import delete_api, mApi
 from blueprints.models import get_blueprint
 from spawner import Spawner
 from utils import naminator, query_db
@@ -65,27 +65,29 @@ async def create_api(queue, event, app):
         specs=specs
     )
 
-    # docker events is in charge of updating status
     if not service:
-        log.error(
-            f"{uuid}: blueprint `{api['blueprint_uuid']}` not found")
+        log.error(f"Api({uuid}) creation failed, deleting db entry.")
+
+        await delete_api(db=app['db'], api_ref=uuid, user_id=user_id)
+        log.info(f"DB entry for api({uuid}) deleted.")
+
         event = {
             "user_id": user_id,
-            "message": {
+            "uuid": uuid,
+            "data": {
                 "status": "error",
-                "message": "",  # TODO put a message here
+                "message": "The creation of your cargo failed.",
             }
         }
 
         await streaming.publish("user.notification", event)
         return
 
-    notifcation = {
+    event = {
         "user_id": user_id,
-        "message": {
-            "status": "error",
-            "message": "",  # TODO put a message here
-        }
+        "uuid": uuid,
+        "name": name,
+        "specs": specs
     }
-    await streaming.publish("user.notification", notifcation)
-    log.info(f"{event['uuid']}: service.api.completed.")
+
+    await streaming.publish("service.api.completed", event)

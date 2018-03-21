@@ -6,7 +6,7 @@ from secrets import token_urlsafe
 from rampante import streaming, subscribe_on
 
 from blueprints.models import get_blueprint
-from probes.models import mProbe
+from probes.models import delete_probe, mProbe
 from spawner import Spawner
 from utils import naminator, query_db
 
@@ -70,25 +70,28 @@ async def create_probe(queue, event, app):
     )
 
     if not service:
-        log.error(
-            f"{uuid}: blueprint `{probe['blueprint']}` not found")
+        log.error(f"Probe({uuid}) failed, deleting db entry.")
+
+        await delete_probe(db=app['db'], probe_ref=uuid, user_id=user_id)
+        log.info(f"DB entry for probe({uuid}) deleted.")
+
         event = {
             "user_id": user_id,
-            "message": {
+            "uuid": uuid,
+            "data": {
                 "status": "error",
-                "message": "",  # TODO put a message here
+                "message": "The creation of your probe failed.",
             }
         }
+
         await streaming.publish("user.notification", event)
         return
 
     event = {
         "user_id": user_id,
-        "message": {
-            "status": "error",
-            "message": "",  # TODO put a message here
-        }
+        "uuid": uuid,
+        "name": name,
+        "specs": specs
     }
 
-    log.info(f"{uuid}: service.job.completed.")
-    await streaming.publish("user.notification", event)
+    await streaming.publish("service.probe.completed", event)

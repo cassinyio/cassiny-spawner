@@ -5,7 +5,7 @@ from secrets import token_urlsafe
 
 from rampante import streaming, subscribe_on
 
-from cargos.models import mCargo
+from cargos.models import delete_cargo, mCargo
 from spawner import Spawner
 from utils import naminator, query_db
 
@@ -51,13 +51,17 @@ async def create_cargo(queue, event, app):
     )
 
     if not service:
-        log.error(
-            f"{uuid}: cargo creation failed")
+        log.error(f"Cargo({uuid}) creation failed, deleting db entry.")
+
+        await delete_cargo(db=app['db'], cargo_ref=uuid, user_id=user_id)
+        log.info(f"DB entry for cargo({uuid}) deleted.")
+
         event = {
             "user_id": user_id,
-            "message": {
+            "uuid": uuid,
+            "data": {
                 "status": "error",
-                "message": "",  # TODO put a message here
+                "message": "The creation of your cargo failed.",
             }
         }
 
@@ -65,13 +69,10 @@ async def create_cargo(queue, event, app):
         return
 
     event = {
-        "uuid": uuid,
         "user_id": user_id,
-        "message": {
-            "status": "error",
-            "message": "",  # TODO put a message here
-        }
+        "uuid": uuid,
+        "name": name,
+        "specs": specs
     }
 
-    log.info(f"{uuid}: service.api.completed.")
-    await streaming.publish("user.notification", event)
+    await streaming.publish("service.cargo.completed", event)
