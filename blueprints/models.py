@@ -14,6 +14,7 @@ from sqlalchemy import (
     Integer,
     String,
     Table,
+    UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func, select
@@ -34,6 +35,9 @@ mBlueprint = Table(
     Column('created_at', DateTime(timezone=True),
            server_default=func.now()),
     Column('user_id', Integer, nullable=True),
+
+    # each image should be unique
+    UniqueConstraint('repository', 'name', 'tag'),
 )
 
 
@@ -116,3 +120,14 @@ async def get_blueprint(db, blueprint_ref: str, user_id: str):
         result = await conn.execute(query)
         row = await result.fetchone()
     return row
+
+
+async def delete_blueprint(db, blueprint_ref: str, user_id: str):
+    """Remove a blueprint from the database."""
+    blueprint = await get_blueprint(db, blueprint_ref, user_id)
+    if blueprint:
+        query = mBlueprint.delete().where(mBlueprint.c.uuid == blueprint.uuid)
+        async with db.acquire() as conn:
+            await conn.execute(query)
+        return blueprint
+    return None

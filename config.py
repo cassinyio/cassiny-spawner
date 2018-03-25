@@ -66,7 +66,7 @@ class Config():
         "version": 1,
         "formatters": {
             "default": {
-                "format": "[%(levelname)s][%(filename)s:%(lineno)d]: %(asctime)s - %(message)s",
+                "format": "[%(levelname)s][%(name)s]: %(asctime)s - %(message)s",
                 "datefmt": "%Y-%m-%d %H:%M:%S"
             }
         },

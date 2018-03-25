@@ -23,7 +23,7 @@ class JobSchema(Schema):
     preemptible = fields.Bool(required=True, allow_none=False)
 
     # export only
-    id = fields.Int(dump_only=True)
+    uuid = fields.Str(dump_only=True)
     name = fields.Str(dump_only=True)
     created_at = fields.DateTime(format="%Y-%m-%d %H:%M:%S")
 

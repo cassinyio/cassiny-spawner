@@ -5,9 +5,15 @@ Blueprints routes.
 All rights reserved.
 """
 
-from blueprints.views import Blueprint
+from blueprints.views import (
+    Blueprint,
+    BlueprintFromFolder,
+    BuildFromS3,
+)
 
 routes = (
     ('*', '/api/spawner/blueprints', Blueprint),
-    ('POST', '/api/spawner/blueprints/cargo/{cargo_id}', Blueprint),
+    ('DELETE', '/api/spawner/blueprints/{blueprint_ref}', Blueprint),
+    ('POST', '/api/spawner/blueprints/create_from_cargo', BuildFromS3),
+    ('POST', '/api/spawner/blueprints/create_from_folder', BlueprintFromFolder),
 )

@@ -32,7 +32,7 @@ class Blueprint(BaseService):
             fileobj=fileobj,
         )
 
-        service_id = await self._spawner.push(name=name)
+        #service_id = await self._spawner.push(name=name)
         return service_id
 
     async def push(self, name: str):

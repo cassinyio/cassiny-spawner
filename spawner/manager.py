@@ -83,10 +83,9 @@ class ServiceManager:
         try:
             await self.docker.services.create(**params)
         except DockerError as err:
-            log.exception(f"Error while creating service {name}")
+            log.exception(f"Error while creating service {name}.")
             return False
         else:
-            log.info(f"Created service {name}")
             return True
 
     @staticmethod
