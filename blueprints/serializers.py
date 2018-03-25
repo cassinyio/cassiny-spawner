@@ -22,7 +22,7 @@ class CreateBlueprint(Schema):
 
 
 class BlueprintSchema(Schema):
-    id = fields.Int()
+    uuid = fields.Str()
     repository = fields.Str()
     name = fields.Str()
     tag = fields.Str()

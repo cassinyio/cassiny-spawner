@@ -28,15 +28,13 @@ async def create_blueprint(queue, event, app):
     blueprint = event["blueprint"]
     registry = "registry.cassiny.io"
 
-    image_name = f"{registry}/{user}/{blueprint.name}:{blueprint['tag']}"
+    image_name = f"{registry}/{user}/{blueprint['name']}:{blueprint['tag']}"
 
     if "path" in event:
         with CreateFromFile(event["path"], blueprint['base_image']) as fo:
-            await Spawner.blueprint.build(
+            await Spawner.blueprint.create(
                 fileobj=fo,
-                nocache=True,
-                encoding="gzip",
-                tag=image_name,
+                name=image_name,
             )
     else:
         s3_key = event["s3_key"]
@@ -49,34 +47,30 @@ async def create_blueprint(queue, event, app):
             cargo=cargo,
             base_image=blueprint['base_image']
         ) as fo:
-            await Spawner.blueprint.build(
+            await Spawner.blueprint.create(
                 fileobj=fo,
-                nocache=True,
-                encoding="gzip",
                 name=image_name,
             )
-    # fix this part
-    auth = {"username": "barrachri", "password": "empty"}
-    await Spawner.blueprint.push(name=image_name, auth=auth)
+    # TODO: fix this part
+    # auth = {"username": "barrachri", "password": "empty"}
+    #await Spawner.blueprint.push(name=image_name, auth=auth)
 
     # insert blueprint into db
     try:
         query = mBlueprint.insert().values(
+            uuid=event['uuid'],
             repository=f"{registry}/{user}",
             name=blueprint['name'],
             tag=blueprint['tag'],
             user_id=user_id,
-            description=event["description"]
+            description=blueprint["description"]
         )
-        async with app.db.acquire() as conn:
+        async with app['db'].acquire() as conn:
             await conn.execute(query)
     except InterfaceError:
         raise
 
     event = {
-        "user_id": user_id,
-        "cargo": cargo.name,
-        "blueprint": blueprint
     }
 
     await streaming.publish("user.notification", event)

@@ -42,6 +42,7 @@ class Api(BaseService):
             name=name, user_id=user_id,
             specs=specs, env=env, service_labels=service_labels
         )
+        log.info(f"{specs['service_type']}({name}) created.")
         return service
 
     @staticmethod

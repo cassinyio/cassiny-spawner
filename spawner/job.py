@@ -37,6 +37,7 @@ class Job(BaseService):
             specs=specs,
             env=env
         )
+        log.info(f"{specs['service_type']}({name}) created.")
         return service_id
 
     @staticmethod
