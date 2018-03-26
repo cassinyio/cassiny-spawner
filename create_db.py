@@ -8,23 +8,22 @@ import cargos.models  # noqa
 import jobs.models  # noqa
 import probes.models  # noqa
 from apis import mApi  # noqa
-from config import Config as C
+from config import Config
 from events import mLog  # noqa
 from factory import metadata
 
-logging.config.dictConfig(C.DEFAULT_LOGGING)
+logging.config.dictConfig(Config.DEFAULT_LOGGING)
 log = logging.getLogger(__name__)
 
 
 def create_tables():
     """Create db tables."""
-    dsn = f"postgresql+psycopg2://{C.DB_USER}:{C.DB_PASSWORD}@{C.DB_HOST}:{C.DB_PORT}/{C.DB_NAME}"
     try:
-        engine = create_engine(dsn)
+        engine = create_engine(Config.make_dsn())
         metadata.create_all(engine)
-        log.info("Tables created")
+        log.info("cassiny-spawner's db tables created.")
     except Exception:
-        log.exception("Something went wrong")
+        log.exception("Something went wrong during cassiny-spawner's db tables creation.")
         raise
 
 

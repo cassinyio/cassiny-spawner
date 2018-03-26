@@ -30,7 +30,7 @@ class Config():
 
     # PUBLIC KEY
     try:
-        with open("./keys/public_key.pub", mode="rb") as f:
+        with open("./keys/public.key", mode="rb") as f:
             PUBLIC_KEY = f.read()
     except FileNotFoundError:
         log.error("Public key not found.")
@@ -92,6 +92,10 @@ class Config():
         },
         "disable_existing_loggers": False
     }
+
+    @classmethod
+    def make_dsn(cls):
+        return f"postgresql://{cls.DB_USER}:{cls.DB_PASSWORD}@{cls.DB_HOST}:{cls.DB_PORT}/{cls.DB_NAME}"
 
 
 class TestingConfig(Config):

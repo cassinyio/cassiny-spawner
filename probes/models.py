@@ -14,7 +14,6 @@ from sqlalchemy import (
     Integer,
     String,
     Table,
-    Unicode,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.sql import func, select
@@ -27,7 +26,7 @@ mProbe = Table(
     Column('name', String(100), unique=True),
     Column('created_at', DateTime(timezone=True),
            server_default=func.now()),
-    Column('description', Unicode(255)),
+    Column('description', String(255)),
     Column('specs', JSONB),
     Column('token', String(45)),
     Column('status', Integer, default=0),

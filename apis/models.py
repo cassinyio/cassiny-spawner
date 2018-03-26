@@ -14,7 +14,6 @@ from sqlalchemy import (
     Integer,
     String,
     Table,
-    Unicode,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.sql import func, select
@@ -29,7 +28,7 @@ mApi = Table(
     Column('created_at', DateTime(timezone=True),
            server_default=func.now()),
     Column('specs', JSONB),
-    Column('description', Unicode(255)),
+    Column('description', String(255)),
     Column('status', Integer, default=0),
 
     Column('user_id', Integer, nullable=False),
