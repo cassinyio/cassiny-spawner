@@ -16,4 +16,4 @@ RUN pip --no-cache-dir install -r requirements/common.txt
 COPY . /src
 
 # Configure container startup
-CMD ["python", "app.py", "0.0.0.0"]
+CMD ["./run.sh"]
