@@ -35,7 +35,7 @@ jobs:
         - sudo mkdir ./keys
         - sudo chown -R $USER ./keys
         - ssh-keygen -t rsa -b 4096 -f ./keys/private.key -N ''
-        - openssl rsa -in ./keys/private.key -pubout -outform PEM -out ./keys/public_key.pub
+        - openssl rsa -in ./keys/private.key -pubout -outform PEM -out ./keys/public.key
         - pip install -r requirements/ci.txt
         - pip install -r requirements/common.txt
       script:
