@@ -4,5 +4,5 @@ mypy==0.580
 pytest==3.5.0
 pytest-aiohttp==0.3.0
 pytest-cov==2.5.1
-SQLAlchemy-Utils==0.33.0
+SQLAlchemy-Utils==0.33.1
 codecov==2.0.15
