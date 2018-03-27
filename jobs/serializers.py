@@ -20,7 +20,6 @@ class JobSchema(Schema):
     machine_type = fields.Str(required=True, validate=OneOf(Config.MACHINES))
     command = fields.Str(required=True, allow_none=False)
     gpu = fields.Bool(required=True, allow_none=False)
-    preemptible = fields.Bool(required=True, allow_none=False)
 
     # export only
     uuid = fields.Str(dump_only=True)

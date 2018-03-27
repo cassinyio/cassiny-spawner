@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 @subscribe_on("service.api.create")
 async def create_api(queue, event, app):
-    """"""
+    """Task `api.create` events."""
     user_id = event["user_id"]
     api = event["data"]
     uuid = event["uuid"]
@@ -29,7 +29,7 @@ async def create_api(queue, event, app):
             "user_id": user_id,
             "message": {
                 "status": "error",
-                "message": "",  # TODO put a message here
+                "message": f"{api['blueprint']} does not exist.",
             }
         }
 
@@ -46,7 +46,6 @@ async def create_api(queue, event, app):
         'machine_type': api['machine_type'],
         'command': api['command'],
         'gpu': api['gpu'],
-        'preemptible': api['preemptible']
     }
 
     query = mApi.insert().values(
@@ -76,7 +75,7 @@ async def create_api(queue, event, app):
             "uuid": uuid,
             "data": {
                 "status": "error",
-                "message": "The creation of your cargo failed.",
+                "message": "The creation of your API failed.",
             }
         }
 

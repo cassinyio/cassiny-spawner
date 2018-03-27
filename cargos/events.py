@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 @subscribe_on("service.cargo.create")
 async def create_cargo(queue, event, app):
-    """Create a new cargo."""
+    """Task `cargo.create` events."""
     uuid = event['uuid']
     user_id = event["user_id"]
     cargo = event["data"]
