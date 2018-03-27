@@ -18,7 +18,6 @@ async def test_post_apis(cli, valid_token):
         'description': "This is a test",
         'machine_type': "medium",
         'command': "python app.py 0.0.0.0:8080",
-        'preemptible': False,
         'gpu': False
     }
     resp = await cli.post('/api/spawner/apis', json=body)

@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 @subscribe_on("service.job.create")
 async def create_job(queue, event, app):
-    """Create a new job."""
+    """Task `job.create` events."""
     user_id = event["user_id"]
     job = event["data"]
     uuid = event["uuid"]
@@ -29,7 +29,7 @@ async def create_job(queue, event, app):
             "user_id": user_id,
             "message": {
                 "status": "error",
-                "message": "",  # TODO put a message here
+                "message": f"{job['blueprint']} does not exist.",
             }
         }
 
@@ -46,7 +46,6 @@ async def create_job(queue, event, app):
         'machine_type': job['machine_type'],
         'command': job['command'],
         'gpu': job['gpu'],
-        'preemptible': job['preemptible']
     }
 
     query = mJob.insert().values(

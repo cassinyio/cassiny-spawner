@@ -20,7 +20,6 @@ class ProbeSchema(Schema):
     blueprint = fields.Str(required=True)
     machine_type = fields.Str(required=True, validate=OneOf(Config.MACHINES))
     gpu = fields.Bool(required=True, allow_none=False)
-    preemptible = fields.Bool(required=True, allow_none=False)
 
     # export only
     id = fields.Int(dump_only=True)

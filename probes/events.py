@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 @subscribe_on("service.probe.create")
 async def create_probe(queue, event, app):
-    """Create a new probe."""
+    """Task `probe.create` events."""
     user_id = event["user_id"]
     probe = event["data"]
     uuid = event["uuid"]
@@ -31,7 +31,7 @@ async def create_probe(queue, event, app):
             "user_id": user_id,
             "message": {
                 "status": "error",
-                "message": "",  # TODO put a message here
+                "message": f"{probe['blueprint']} does not exist.",
             }
         }
 
@@ -48,7 +48,6 @@ async def create_probe(queue, event, app):
         'networks': ["cassiny-public"],
         'machine_type': probe['machine_type'],
         'gpu': probe['gpu'],
-        'preemptible': probe['preemptible']
     }
 
     query = mProbe.insert().values(

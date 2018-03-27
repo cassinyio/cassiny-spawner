@@ -18,7 +18,6 @@ async def test_post_jobs(cli, valid_token):
         'description': "This is a test",
         'machine_type': "medium",
         'command': "python -c 'print (1)'",
-        'preemptible': False,
         'gpu': False
     }
     resp = await cli.post('/api/spawner/jobs', json=body)

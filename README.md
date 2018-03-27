@@ -4,5 +4,4 @@
 [![Python 3](https://pyup.io/repos/github/cassinyio/cassiny-spawner/python-3-shield.svg)](https://pyup.io/repos/github/cassinyio/cassiny-spawner/)
 [![Updates](https://pyup.io/repos/github/cassinyio/cassiny-spawner/shield.svg)](https://pyup.io/repos/github/cassinyio/cassiny-spawner/)
 
-
 Creates and controls services.

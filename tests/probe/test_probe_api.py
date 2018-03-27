@@ -17,7 +17,6 @@ async def test_post_probes(cli, valid_token):
         'blueprint': "2a83d4be-0f70-11e8-9e4b-35694e577c22",
         'description': "This is a test",
         'machine_type': "medium",
-        'preemptible': True,
         'gpu': True
     }
     resp = await cli.post('/api/spawner/probes', json=body)
