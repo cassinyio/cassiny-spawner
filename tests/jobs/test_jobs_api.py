@@ -28,6 +28,7 @@ async def test_post_jobs(cli, valid_token):
     data = await resp.json()
     assert data["message"]
 
+
 async def test_delete_jobs(cli, valid_token):
     body = {
         'blueprint': "2a83d4be-0f70-11e8-9e4b-35694e577c22",

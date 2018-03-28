@@ -69,7 +69,7 @@ class Blueprint(WebView):
         }
 
         await streaming.publish("service.blueprint.deleted", event)
-        message = f"We are removing {blueprint.name}"
+        message = f"We are removing {deleted_blueprint.name}"
         return json_response({"message": message})
 
 

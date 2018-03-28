@@ -1,5 +1,6 @@
 import asyncio
 
+
 async def test_get_apis(cli, valid_token):
     resp = await cli.get('/api/spawner/apis')
     assert resp.status == 200
