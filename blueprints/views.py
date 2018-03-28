@@ -56,15 +56,16 @@ class Blueprint(WebView):
             error = "That Blueprint doesn't exist anymore."
             return json_response({"error": error}, status=400)
 
-        blueprint = await delete_blueprint(self.db, blueprint_ref=data['reference'], user_id=user_id)
-        if blueprint is None:
+        deleted_blueprint = await delete_blueprint(self.db, blueprint_ref=data['reference'], user_id=user_id)
+        if deleted_blueprint is None:
             log.info(f"Blueprint doesn't exist inside the database: {data['reference']}")
             error = "That Blueprint doesn't exist anymore."
             return json_response({"error": error}, status=400)
 
         event = {
+            "uuid": deleted_blueprint.uuid,
             "user_id": user_id,
-            "name": blueprint.name,
+            "name": deleted_blueprint.name,
         }
 
         await streaming.publish("service.blueprint.deleted", event)

@@ -59,7 +59,10 @@ class Probe(WebView):
 
         await streaming.publish("service.probe.create", event)
 
-        return json_response({"message": f"We are creating your probe ({event['uuid']})."})
+        return json_response({
+            "uuid": event['uuid'],
+            "message": f"We are creating your probe ({event['uuid']})."
+        })
 
     @verify_token
     async def delete(self, payload: type_payload):
@@ -74,7 +77,9 @@ class Probe(WebView):
             return json_response({"error": error}, status=400)
 
         await Spawner.probe.delete(name=deleted_probe.name)
+
         event = {
+            "uuid": deleted_probe.uuid,
             "user_id": user_id,
             "name": deleted_probe.name,
         }

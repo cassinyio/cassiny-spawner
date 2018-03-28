@@ -1,3 +1,6 @@
+import asyncio
+
+
 async def test_get_probes(cli, valid_token):
     resp = await cli.get('/api/spawner/probes')
     assert resp.status == 200
@@ -23,3 +26,19 @@ async def test_post_probes(cli, valid_token):
     assert resp.status == 200
     data = await resp.json()
     assert data["message"]
+
+
+async def test_delete_probes(cli, valid_token):
+    body = {
+        'blueprint': "2a83d4be-0f70-11e8-9e4b-35694e577c22",
+        'description': "This is a test",
+        'machine_type': "medium",
+        'gpu': True
+    }
+    resp = await cli.post('/api/spawner/probes', json=body)
+    assert resp.status == 200
+    data = await resp.json()
+    uuid = data['uuid']
+    await asyncio.sleep(5)
+    resp = await cli.delete(f'/api/spawner/probes/{uuid}')
+    assert resp.status == 200

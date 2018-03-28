@@ -58,7 +58,10 @@ class APIs(WebView):
 
         await streaming.publish("service.api.create", event)
 
-        return json_response({"message": f"We are creating your api ({event['uuid']})."})
+        return json_response({
+            "uuid": event['uuid'],
+            "message": f"We are creating your api ({event['uuid']})."
+        })
 
     @verify_token
     async def delete(self, payload: Mapping[str, Any]):
@@ -74,10 +77,13 @@ class APIs(WebView):
             return json_response({"error": user_message}, status=400)
 
         await Spawner.api.delete(name=deleted_api.name)
+
         event = {
+            "uuid": deleted_api.uuid,
             "user_id": user_id,
             "name": deleted_api.name,
         }
+
         await streaming.publish("service.api.deleted", event)
         user_message = f"We are removing {deleted_api.name}"
         return json_response({"message": user_message})

@@ -1,3 +1,6 @@
+import asyncio
+
+
 async def test_get_cargos(cli, valid_token):
     resp = await cli.get('/api/spawner/cargos')
     assert resp.status == 200
@@ -21,3 +24,17 @@ async def test_post_cargos(cli, valid_token):
     assert resp.status == 200
     data = await resp.json()
     assert data["message"]
+
+
+async def test_delete_cargos(cli, valid_token):
+    body = {
+        'description': "This is a test",
+        'size': 10,
+    }
+    resp = await cli.post('/api/spawner/cargos', json=body)
+    assert resp.status == 200
+    data = await resp.json()
+    uuid = data['uuid']
+    await asyncio.sleep(5)
+    resp = await cli.delete(f'/api/spawner/cargos/{uuid}')
+    assert resp.status == 200
