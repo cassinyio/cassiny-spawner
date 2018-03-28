@@ -64,7 +64,7 @@ async def delete_probe(db, probe_ref: str, user_id: str):
             (mProbe.c.uuid == probe_ref)
         )
     async with db.acquire() as conn:
-        result = await conn.execute(query.returning(mProbe.c.name))
+        result = await conn.execute(query.returning(mProbe.c.uuid, mProbe.c.name))
         row = await result.fetchone()
     return row
 

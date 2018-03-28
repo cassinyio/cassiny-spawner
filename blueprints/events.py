@@ -16,7 +16,6 @@ log = logging.getLogger(__name__)
 @subscribe_on("service.blueprint.create")
 async def create_blueprint(queue, event, app):
     """Task `blueprint.create` events."""
-    log.error("Event recevied")
     user_id = event["user_id"]
     user = event["email"].replace("@", "")
     blueprint = event["blueprint"]

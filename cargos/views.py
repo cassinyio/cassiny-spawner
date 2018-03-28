@@ -55,7 +55,10 @@ class Cargo(WebView):
 
         await streaming.publish("service.cargo.create", event)
 
-        return json_response({"message": f"We are creating your cargo ({event['uuid']})."})
+        return json_response({
+            "uuid": event['uuid'],
+            "message": f"We are creating your cargo ({event['uuid']})."
+        })
 
     @verify_token
     async def delete(self, payload: Mapping[str, Any]):

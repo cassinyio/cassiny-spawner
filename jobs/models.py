@@ -52,7 +52,7 @@ async def delete_job(db, job_ref: str, user_id: str):
             (mJob.c.uuid == job_ref)
         )
     async with db.acquire() as conn:
-        result = await conn.execute(query.returning(mJob.c.name))
+        result = await conn.execute(query.returning(mJob.c.uuid, mJob.c.name))
         row = await result.fetchone()
     return row
 

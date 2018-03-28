@@ -87,6 +87,6 @@ async def delete_cargo(db, cargo_ref: str, user_id: str):
             (mCargo.c.uuid == cargo_ref)
         )
     async with db.acquire() as conn:
-        result = await conn.execute(query.returning(mCargo.c.name))
+        result = await conn.execute(query.returning(mCargo.c.uuid, mCargo.c.name))
         row = await result.fetchone()
     return row

@@ -58,7 +58,10 @@ class Jobs(WebView):
 
         await streaming.publish("service.job.create", event)
 
-        return json_response({"message": f"We are creating your job ({event['uuid']})."})
+        return json_response({
+            "uuid": event['uuid'],
+            "message": f"We are creating your job ({event['uuid']})."
+        })
 
     @verify_token
     async def delete(self, payload: Mapping[str, Any]):
@@ -75,6 +78,7 @@ class Jobs(WebView):
         await Spawner.job.delete(name=deleted_job.name)
 
         event = {
+            "uuid": deleted_job.uuid,
             "user_id": user_id,
             "name": deleted_job.name,
         }

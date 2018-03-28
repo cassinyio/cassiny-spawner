@@ -56,7 +56,7 @@ async def delete_api(db, api_ref: str, user_id: str):
             (mApi.c.uuid == api_ref)
         )
     async with db.acquire() as conn:
-        result = await conn.execute(query.returning(mApi.c.name))
+        result = await conn.execute(query.returning(mApi.c.uuid, mApi.c.name))
         row = await result.fetchone()
     return row
 
