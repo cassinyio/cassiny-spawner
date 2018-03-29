@@ -3,12 +3,13 @@
 import logging
 
 from rampante import streaming, subscribe_on
-from sqlalchemy.exc import InterfaceError
 
 from blueprints.build_from_file import CreateFromFile
 from blueprints.build_from_s3 import CreateFromS3
 from blueprints.models import mBlueprint
 from spawner import Spawner
+
+from config import Config
 
 log = logging.getLogger(__name__)
 
@@ -44,26 +45,28 @@ async def create_blueprint(queue, event, app):
                 fileobj=fo,
                 name=image_name,
             )
-    # TODO: fix this part
-    # auth = {"username": "barrachri", "password": "empty"}
-    #await Spawner.blueprint.push(name=image_name, auth=auth)
 
-    # insert blueprint into db
-    try:
-        query = mBlueprint.insert().values(
-            uuid=event['uuid'],
-            repository=f"{registry}/{user}",
-            name=blueprint['name'],
-            tag=blueprint['tag'],
-            user_id=user_id,
-            description=blueprint["description"]
-        )
-        async with app['db'].acquire() as conn:
-            await conn.execute(query)
-    except InterfaceError:
-        raise
+    await Spawner.blueprint.push(
+        name=image_name,
+        username=Config.REGISTRY_USER,
+        password=Config.REGISTRY_PASSWORD
+    )
+
+    query = mBlueprint.insert().values(
+        uuid=event['uuid'],
+        repository=f"{registry}/{user}",
+        name=blueprint['name'],
+        tag=blueprint['tag'],
+        user_id=user_id,
+        description=blueprint["description"]
+    )
+    async with app['db'].acquire() as conn:
+        await conn.execute(query)
 
     event = {
+        "user_id": user_id,
+        "uuid": event['uuid'],
+        "image_name": image_name,
     }
 
-    await streaming.publish("user.notification", event)
+    await streaming.publish("service.blueprint.completed", event)

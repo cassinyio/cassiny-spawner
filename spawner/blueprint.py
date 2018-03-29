@@ -35,15 +35,10 @@ class Blueprint(BaseService):
         #service_id = await self._spawner.push(name=name)
         return service_id
 
-    async def push(self, name: str):
+    async def push(self, name: str, username: str, password: str):
         """
-        Create a new job as a Docker service.
-
-        Parameters
-        -----------
-        tag
-            unique name for the probe.
-
+        Push a docker image to a registry.
         """
-        service_id = await self._spawner.push(name=name)
+        auth = {"username": username, "password": password}
+        service_id = await self._spawner.push(name=name, auth=auth)
         return service_id

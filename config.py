@@ -61,6 +61,10 @@ class Config():
     API_DEFAULT_URL = "http://0.0.0.0:8080"
     CARGO_DEFAULT_URL = "http://0.0.0.0:9000"
 
+    # registry user and password
+    REGISTRY_USER = os.getenv("REGISTRY_USER", "")
+    REGISTRY_PASSWORD = os.getenv("REGISTRY_PASSWORD", "")
+
     # LOGGING CONFIGURATION
     DEFAULT_LOGGING = {
         "version": 1,
