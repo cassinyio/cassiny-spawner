@@ -236,7 +236,7 @@ class ServiceManager:
         return building_image
 
     async def push(self, name, auth):
-        """Push a image to a registry."""
+        """Push an image to a registry."""
         log.info(f"Pushing image {name}")
         pushing_image = await self.docker.images.push(name=name, auth=auth)
         return pushing_image
