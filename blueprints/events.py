@@ -7,9 +7,8 @@ from rampante import streaming, subscribe_on
 from blueprints.build_from_file import CreateFromFile
 from blueprints.build_from_s3 import CreateFromS3
 from blueprints.models import mBlueprint
-from spawner import Spawner
-
 from config import Config
+from spawner import Spawner
 
 log = logging.getLogger(__name__)
 
