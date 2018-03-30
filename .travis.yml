@@ -52,8 +52,7 @@ jobs:
         - docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
         - export TAG=$TRAVIS_BRANCH
         - docker build -f Dockerfile -t $REPO:$TAG .
-        - docker tag $REPO:$TAG $REPO:latest
-        - docker push $REPO
+        - docker push $REPO:$TAG
 
 notifications:
   webhooks:
