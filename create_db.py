@@ -13,7 +13,7 @@ from events import mLog  # noqa
 from factory import metadata
 
 logging.config.dictConfig(Config.DEFAULT_LOGGING)
-log = logging.getLogger(__name__)
+log = logging.getLogger("create_db.py")
 
 
 def create_tables():

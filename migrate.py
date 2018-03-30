@@ -4,11 +4,10 @@ import logging.config
 from alembic.config import Config as AlembicConfig
 from alembic import command
 
-from auth import models  # noqa: F401
 from config import Config
 
 logging.config.dictConfig(Config.DEFAULT_LOGGING)
-log = logging.getLogger(__name__)
+log = logging.getLogger("migrate.py")
 
 
 def make_migration():
