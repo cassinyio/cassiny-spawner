@@ -8,6 +8,7 @@ All rights reserved.
 import logging
 import os
 from enum import IntEnum
+from uuid import uuid4
 
 log = logging.getLogger(__name__)
 
@@ -38,6 +39,7 @@ class Config():
 
     # STREAM
     STREAM_URI = os.getenv("STREAM_URI", "nats://127.0.0.1:4222")
+    STREAM_CLIENT_NAME = f"cassiny-spawner-{uuid4().hex[:10]}"
 
     # DATABASE_URI
     DB_USER = os.getenv("DB_USER", "postgres")
