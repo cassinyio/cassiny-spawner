@@ -5,8 +5,9 @@ FROM python:3.6.4-alpine
 LABEL maintainer "wow@cassiny.io"
 
 RUN apk update && \
-    apk add build-base && \
-    apk add postgresql-dev
+    apk add build-base \
+    postgresql-dev \
+    libffi-dev
 
 RUN mkdir /src
 WORKDIR /src
