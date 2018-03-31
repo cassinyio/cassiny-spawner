@@ -126,6 +126,22 @@ def upgrade():
         Column('user_id', Integer, nullable=False),
     )
 
+    op.create_table(
+        'logs',
+        Column('id', Integer, primary_key=True),
+        # unique log identifier
+        Column('uuid', UUID),
+        Column('log_type', String(10)),
+        Column('service_type', String(5)),
+        Column('name', String(200)),
+        Column('action', String(10)),
+        Column('created_at', DateTime, server_default=func.now()),
+        Column('user_id', Integer, nullable=False),
+
+        # uuid-action should be unique
+        UniqueConstraint('uuid', 'action'),
+    )
+
 
 def downgrade():
     pass
