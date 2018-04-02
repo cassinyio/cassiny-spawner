@@ -6,15 +6,15 @@ POSTGRES_USER=postgres
 POSTGRES_DB=cassiny
 
 lint:
-	@isort -rc -c --diff -m 3 app.py config.py factory.py create_db.py apis blueprints cargos events jobs probes spawner utils tests
-	@flake8 app.py config.py factory.py create_db.py apis blueprints cargos events jobs probes spawner utils tests
-	@mypy app.py config.py factory.py create_db.py apis blueprints cargos events jobs probes spawner utils tests --ignore-missing-imports
+	@isort -rc -c --diff -m 3 app.py config.py factory.py create_db.py apis blueprints cargos monitoring jobs probes spawner utils tests
+	@flake8 app.py config.py factory.py create_db.py apis blueprints cargos monitoring jobs probes spawner utils tests
+	@mypy app.py config.py factory.py create_db.py apis blueprints cargos monitoring jobs probes spawner utils tests --ignore-missing-imports
 
 isort:
-	@isort -rc -m 3 app.py config.py factory.py create_db.py apis blueprints cargos events jobs probes spawner utils tests
+	@isort -rc -m 3 app.py config.py factory.py create_db.py apis blueprints cargos monitoring jobs probes spawner utils tests
 
 test:
-	@py.test --cov apis --cov blueprints --cov cargos --cov events --cov jobs --cov probes --cov spawner --cov utils --cov tests
+	@py.test --cov apis --cov blueprints --cov cargos --cov monitoring --cov jobs --cov probes --cov spawner --cov utils --cov tests
 
 clean:
 	@find . -name \*.pyc -delete

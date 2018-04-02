@@ -10,7 +10,6 @@ import logging
 import logging.config
 import sys
 
-from aiodocker import Docker
 from aiohttp import web
 from aiopg.sa import create_engine
 from psycopg2 import OperationalError
@@ -20,9 +19,8 @@ from apis import routes as api_routes
 from blueprints import routes as blueprint_routes
 from cargos import routes as cargo_routes
 from config import Config as C
-from events import docker_listener
-from events import routes as event_routes
 from jobs import routes as job_routes
+from monitoring import routes as monitoring_routes
 from probes import routes as probe_routes
 
 logging.config.dictConfig(C.DEFAULT_LOGGING)
@@ -69,21 +67,6 @@ async def start_task_manager(app):
         scheduler(loop=app.loop, queue_size=50, app=app))
 
 
-async def start_logger(app):
-    """Load task manager."""
-    app['docker'] = Docker()
-    app['docker_listener'] = asyncio.ensure_future(docker_listener(app))
-
-
-async def stop_logger(app):
-    """Cancel task manager."""
-    if 'docker_listener' in app:
-        app['docker_listener'].cancel()
-        await app['docker_listener']
-    if 'docker' in app:
-        await app['docker'].close()
-
-
 async def stop_task_manager(app):
     """Cancel task manager."""
     await streaming.stop()
@@ -103,16 +86,14 @@ if __name__ == '__main__':
         *job_routes,
         *probe_routes,
         *cargo_routes,
-        *event_routes,
+        *monitoring_routes
     )
 
     # On-startup tasks
     app.on_startup.append(start_task_manager)
     app.on_startup.append(start_db_pool)
-    app.on_startup.append(start_logger)
     # Clean-up tasks
     app.on_cleanup.append(stop_task_manager)
     app.on_cleanup.append(stop_db_pool)
-    app.on_cleanup.append(stop_logger)
 
     web.run_app(app, host=host, port=port)

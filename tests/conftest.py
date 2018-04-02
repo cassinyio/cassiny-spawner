@@ -29,9 +29,10 @@ from blueprints import routes as blueprint_routes
 from cargos import mCargo, mUser_cargos
 from cargos import routes as cargo_routes
 from config import Config as C
-from events import mLog
 from jobs import mJob
 from jobs import routes as job_routes
+from monitoring import mLog
+from monitoring import routes as monitoring_routes
 from probes import mProbe, mUser_probes
 from probes import routes as probe_routes
 from tests.fixtures import _validate_token
@@ -130,6 +131,7 @@ def cli(loop, test_client, create_tables):
         *job_routes,
         *probe_routes,
         *cargo_routes,
+        *monitoring_routes,
     )
     app.on_startup.append(start_task_manager)
     app.on_startup.append(start_db_pool)

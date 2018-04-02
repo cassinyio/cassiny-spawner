@@ -9,8 +9,8 @@ All rights reserved.
 from aiohttp.web import json_response
 from sqlalchemy.sql import select
 
-from events.models import mLog
-from events.serializers import Logs as LogsSchema
+from monitoring.models import mLog
+from monitoring.serializers import Logs as LogsSchema
 from utils import WebView, verify_token
 
 
