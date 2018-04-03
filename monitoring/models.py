@@ -59,7 +59,7 @@ async def update_service_status(db, model, event) -> None:
     """Update status for a docker event."""
     if "service_status" in event:
         query = model.update()\
-            .where(model.c.name == event.name)\
+            .where(model.c.name == event['name'])\
             .values(
             status=event['service_status'],
         )
