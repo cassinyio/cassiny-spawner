@@ -25,7 +25,12 @@ MODEL_TYPE = MappingProxyType({
 @subscribe_on("service.notification")
 async def service_notification(queue, event, app):
     """Save service notifications."""
-    model = MODEL_TYPE[event['service_type']]
+
+    model = MODEL_TYPE.get(event['service_type'])
+
+    if model is None:
+        log.error(f"Invalid service type {event['service_type']}")
+        return
 
     try:
         await add_log(app['db'], event)
@@ -33,4 +38,4 @@ async def service_notification(queue, event, app):
         # the log uuid and action is already inside the db
         log.warning(f"Log ID ({event['uuid']}) with action ({event['action']}) is already inside the db, skipping.")
     else:
-        await update_service_status(app['db'], model, log)
+        await update_service_status(app['db'], model, event)

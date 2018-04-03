@@ -42,25 +42,25 @@ mLog = Table(
 )
 
 
-async def add_log(db, log: Dict) -> None:
+async def add_log(db, event: Dict) -> None:
     """Add a new log for services events."""
     query = mLog.insert().values(
-        uuid=log['uuid'],
-        log_type=log['type'],
-        service_type=log['service_type'],
-        name=log['name'],
-        action=log['action'],
-        user_id=log['user_id']
+        uuid=event['uuid'],
+        log_type=event['type'],
+        service_type=event['service_type'],
+        name=event['name'],
+        action=event['action'],
+        user_id=event['user_id']
     )
     await query_db(db, query, get_result=False)
 
 
-async def update_service_status(db, model, log) -> None:
+async def update_service_status(db, model, event) -> None:
     """Update status for a docker event."""
-    if "status" in log and log['status']:
+    if "status" in event and event['status']:
         query = model.update()\
-            .where(model.c.name == log.name)\
+            .where(model.c.name == event.name)\
             .values(
-            status=log['status'],
+            status=event['status'],
         )
         await query_db(db, query, get_result=False)
