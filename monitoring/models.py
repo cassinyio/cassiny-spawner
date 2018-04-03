@@ -57,10 +57,10 @@ async def add_log(db, event: Dict) -> None:
 
 async def update_service_status(db, model, event) -> None:
     """Update status for a docker event."""
-    if "status" in event and event['status']:
+    if "service_status" in event:
         query = model.update()\
             .where(model.c.name == event.name)\
             .values(
-            status=event['status'],
+            status=event['service_status'],
         )
         await query_db(db, query, get_result=False)
