@@ -122,7 +122,8 @@ class ServiceManager:
             constraint = "node.labels.type == storage"
             placement.append(constraint)
         else:
-            placement.append(f"node.hostname == {name}")
+            instance_name = f"instance-{specs['uuid']}"
+            placement.append(f"node.hostname == {instance_name}")
 
         if specs.get('gpu', False):
             placement.append("node.labels.gpu == true")
