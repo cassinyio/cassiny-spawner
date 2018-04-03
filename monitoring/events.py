@@ -25,6 +25,7 @@ MODEL_TYPE = MappingProxyType({
 @subscribe_on("service.notification")
 async def service_notification(queue, event, app):
     """Save service notifications."""
+    log.info(f"Container event received: {event}")
 
     model = MODEL_TYPE.get(event['service_type'])
 
