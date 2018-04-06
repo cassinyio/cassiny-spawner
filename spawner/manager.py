@@ -171,9 +171,13 @@ class ServiceManager:
                 command = shlex.split(specs["args"])
                 container_spec["Args"] = command
 
-        # mounting volumes inside the service
-        if 'mounts' in specs:
-            container_spec['Mounts'] = []
+        # mounting named volumes inside cargo
+        if specs['service_type'] == "cargo":
+            container_spec['Mounts'] = [{
+                "Source": specs['uuid'],
+                "Type": "volume",
+                "Target": "/data",
+            }]
 
         # add placement conditions
         TaskTemplate['Placement'] = {
