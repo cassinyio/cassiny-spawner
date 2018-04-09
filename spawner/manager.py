@@ -81,7 +81,7 @@ class ServiceManager:
 
         # When we are using a image hosted inside the registry
         # we pass the auth
-        if specs.get('repository') == 'registry.cassiny.io':
+        if 'registry.cassiny.io' in specs.get('repository'):
             params['auth'] = {
                 "username": Config.REGISTRY_USER,
                 "password": Config.REGISTRY_PASSWORD
