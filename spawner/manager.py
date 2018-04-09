@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Mapping, Tuple
 from aiodocker.docker import Docker
 from aiodocker.exceptions import DockerError
 
+from config import Config
 from spawner.api import Api
 from spawner.blueprint import Blueprint
 from spawner.cargo import Cargo
@@ -77,6 +78,15 @@ class ServiceManager:
             params['labels'] = service_labels
 
         params['name'] = name
+
+        # When we are using a image hosted inside the registry
+        # we pass the auth
+        if specs.get('repository') == 'registry.cassiny.io':
+            params['auth'] = {
+                "username": Config.REGISTRY_USER,
+                "password": Config.REGISTRY_PASSWORD
+            }
+            params['registry'] = 'registry.cassiny.io'
 
         log.info(f"task_template: {task_template}")
 
