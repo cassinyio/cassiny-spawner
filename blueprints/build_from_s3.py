@@ -21,7 +21,7 @@ class CreateFromS3:
         s3_key: str,
         s3_skey: str,
         base_image: str,
-        bucket: str="default"
+        bucket: str
     ) -> None:
         self.bucket = bucket
         self.s3_key = s3_key
