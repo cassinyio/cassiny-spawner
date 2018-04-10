@@ -21,6 +21,15 @@ class CreateBlueprint(Schema):
     description = fields.Str()
 
 
+class CreateBlueprintFromCargo(Schema):
+    name = fields.Str()
+    tag = fields.Str()
+    base_image = fields.Str()
+    description = fields.Str()
+    cargo = fields.Str()
+    bucket = fields.Str()
+
+
 class BlueprintSchema(Schema):
     uuid = fields.Str()
     repository = fields.Str()

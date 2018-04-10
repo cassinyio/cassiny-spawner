@@ -54,14 +54,20 @@ async def get_cargos(db, user_id: str):
 
 
 async def get_cargo(db, cargo_ref: str, user_id: str):
-    query = mCargo.select().where(
-        (
-            mCargo.c.user_id == user_id) &
-        (
-            mCargo.c.uuid == cargo_ref |
-            mCargo.c.name == cargo_ref
+    try:
+        uuid.UUID(cargo_ref)
+    except ValueError:
+        query = mCargo.select()\
+            .where(
+            (mCargo.c.user_id == user_id) &
+            (mCargo.c.name == cargo_ref)
         )
-    )
+    else:
+        query = mCargo.select()\
+            .where(
+            (mCargo.c.user_id == user_id) &
+            (mCargo.c.uuid == cargo_ref)
+        )
     async with db.acquire() as conn:
         result = await conn.execute(query)
         row = await result.fetchone()

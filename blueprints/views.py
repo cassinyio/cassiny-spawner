@@ -20,6 +20,7 @@ from blueprints.models import (
 from blueprints.serializers import (
     BlueprintSchema,
     CreateBlueprint,
+    CreateBlueprintFromCargo,
 )
 from cargos.models import get_cargo
 from config import Config
@@ -80,32 +81,31 @@ class BuildFromS3(WebView):
     async def post(self, payload):
         """Create blueprints."""
         user_id = payload["user_id"]
-        cargo_ref = self.request.match_info.get("cargo")
-
         data = await self.request.json()
+        uuid = get_uuid().hex
 
-        blueprint, errors = CreateBlueprint().load(data)
+        blueprint, errors = CreateBlueprintFromCargo().load(data)
         if errors:
             json_response({"error": errors}, status=400)
 
-        cargo = await get_cargo(self.db, user_id=user_id, cargo_ref=cargo_ref)
+        cargo = await get_cargo(self.db, user_id=user_id, cargo_ref=blueprint.cargo)
 
         if cargo is None:
             error = "Did you select the right cargo?"
             return json_response({"error": error}, status=400)
 
         event = {
-            "uuid": get_uuid().hex,
+            "uuid": uuid,
             "user_id": user_id,
             "email": payload['email'],
             "cargo": cargo.name,
             "s3_key": cargo.specs['access_key'],
             "s3_secret": cargo.specs['secret_key'],
-            "blueprint": blueprint
+            "blueprint": blueprint,
         }
         await streaming.publish("service.create.blueprint", event)
 
-        return json_response({"message": "We are creating your blueprint."})
+        return json_response({"message": f"We are creating your blueprint({uuid})."})
 
 
 class BlueprintFromFolder(WebView):
@@ -152,7 +152,7 @@ class BlueprintFromFolder(WebView):
 
         await streaming.publish("service.blueprint.create", event)
 
-        return json_response({"message": "We are creating your blueprint."})
+        return json_response({"message": f"We are creating your blueprint({uuid})."})
 
 
 async def write_file(file_path: str, part) -> None:

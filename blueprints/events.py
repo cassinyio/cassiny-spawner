@@ -39,7 +39,7 @@ async def create_blueprint(queue, event, app):
             s3_skey=s3_skey,
             cargo=cargo,
             base_image=blueprint['base_image'],
-            bucket=event["bucket"],
+            bucket=blueprint["bucket"],
         ) as fo:
             await Spawner.blueprint.create(
                 fileobj=fo,
