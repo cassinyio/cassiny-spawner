@@ -24,7 +24,7 @@ async def create_blueprint(queue, event, app):
     image_name = f"{registry}/{user}/{blueprint['name']}:{blueprint['tag']}"
 
     if "path" in event:
-        with CreateFromFile(event["path"], blueprint['base_image']) as fo:
+        with CreateFromFile(event["path"], event['base_image']) as fo:
             await Spawner.blueprint.create(
                 fileobj=fo,
                 name=image_name,
@@ -38,7 +38,7 @@ async def create_blueprint(queue, event, app):
             s3_key=s3_key,
             s3_skey=s3_skey,
             cargo=cargo,
-            base_image=blueprint['base_image'],
+            base_image=event['base_image'],
             bucket=blueprint["bucket"],
         ) as fo:
             await Spawner.blueprint.create(

@@ -16,7 +16,7 @@ class Blueprint(BaseService):
 
     async def create(self, name: str, fileobj: IO):
         """Build a blueprint using a fileobj."""
-        log.info("Bulding image {name}")
+        log.info(f"Bulding image {name}")
         service_id = await self._spawner.build(
             name=name,
             fileobj=fileobj,

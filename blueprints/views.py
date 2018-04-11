@@ -15,6 +15,7 @@ from rampante import streaming
 
 from blueprints.models import (
     delete_blueprint,
+    get_blueprint,
     get_blueprints,
 )
 from blueprints.serializers import (
@@ -88,10 +89,16 @@ class BuildFromS3(WebView):
             json_response({"error": errors}, status=400)
 
         cargo = await get_cargo(self.db, user_id=user_id, cargo_ref=blueprint['cargo'])
-
         if cargo is None:
             error = "Did you select the right cargo?"
             return json_response({"error": error}, status=400)
+
+        base_blueprint = await get_blueprint(self.db, blueprint_ref=blueprint['base_image'], user_id=user_id)
+        if base_blueprint is None:
+            error = "Did you select the right blueprint?"
+            return json_response({"error": error}, status=400)
+
+        base_image = f"{base_blueprint.repository}/{base_blueprint.name}:{base_blueprint.tag}"
 
         uuid = get_uuid().hex
         event = {
@@ -102,6 +109,7 @@ class BuildFromS3(WebView):
             "s3_key": cargo.specs['access_key'],
             "s3_secret": cargo.specs['secret_key'],
             "blueprint": blueprint,
+            "base_image": base_image,
         }
         await streaming.publish("service.blueprint.create", event)
 
@@ -130,7 +138,13 @@ class BlueprintFromFolder(WebView):
                 data = await part.json()
                 blueprint, errors = CreateBlueprint().load(data)
                 if errors:
-                    json_response({"error": errors}, status=400)
+                    return json_response({"error": errors}, status=400)
+
+                base_blueprint = await get_blueprint(self.db, blueprint_ref=blueprint['base_image'], user_id=user_id)
+                if base_blueprint is None:
+                    error = "Did you select the right blueprint?"
+                    return json_response({"error": error}, status=400)
+
                 continue
 
             file_uuid = f"{uuid}.tar.gz"
@@ -142,12 +156,15 @@ class BlueprintFromFolder(WebView):
                 os.remove(file_path)
                 return json_response({"error": "No proper file format."}, status=400)
 
+        base_image = f"{base_blueprint.repository}/{base_blueprint.name}:{base_blueprint.tag}"
+
         event = {
             "uuid": uuid,
             "user_id": user_id,
             "email": payload['email'],
             "path": file_path,
-            "blueprint": blueprint
+            "blueprint": blueprint,
+            "base_image": base_image
         }
 
         await streaming.publish("service.blueprint.create", event)

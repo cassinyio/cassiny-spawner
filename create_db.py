@@ -9,7 +9,6 @@ import jobs.models  # noqa
 import probes.models  # noqa
 from apis import mApi  # noqa
 from config import Config
-from events import mLog  # noqa
 from factory import metadata
 
 logging.config.dictConfig(Config.DEFAULT_LOGGING)
