@@ -240,19 +240,21 @@ class ServiceManager:
 
     async def build(self, name: str, fileobj):
         """Build docker images."""
-        log.info(f"Building image {name}.")
+        log.info(f"Building image {name}")
         building_image = await self.docker.images.build(
             fileobj=fileobj,
             nocache=True,
             encoding="gzip",
             tag=name
         )
+        log.info(building_image)
         return building_image
 
     async def push(self, name, auth):
         """Push an image to a registry."""
         log.info(f"Pushing image {name}")
         pushing_image = await self.docker.images.push(name=name, auth=auth)
+        log.info(pushing_image)
         return pushing_image
 
     async def logs(self, name, stdout, stderr):
