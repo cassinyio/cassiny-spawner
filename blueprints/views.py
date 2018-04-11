@@ -82,18 +82,18 @@ class BuildFromS3(WebView):
         """Create blueprints."""
         user_id = payload["user_id"]
         data = await self.request.json()
-        uuid = get_uuid().hex
 
         blueprint, errors = CreateBlueprintFromCargo().load(data)
         if errors:
             json_response({"error": errors}, status=400)
 
-        cargo = await get_cargo(self.db, user_id=user_id, cargo_ref=blueprint.cargo)
+        cargo = await get_cargo(self.db, user_id=user_id, cargo_ref=blueprint['cargo'])
 
         if cargo is None:
             error = "Did you select the right cargo?"
             return json_response({"error": error}, status=400)
 
+        uuid = get_uuid().hex
         event = {
             "uuid": uuid,
             "user_id": user_id,

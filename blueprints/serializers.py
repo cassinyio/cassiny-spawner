@@ -15,19 +15,19 @@ class BlueprintForProbeSchema(Schema):
 
 
 class CreateBlueprint(Schema):
-    name = fields.Str()
-    tag = fields.Str()
-    base_image = fields.Str()
-    description = fields.Str()
+    name = fields.Str(required=True)
+    tag = fields.Str(required=True)
+    base_image = fields.Str(required=True)
+    description = fields.Str(required=True)
 
 
 class CreateBlueprintFromCargo(Schema):
-    name = fields.Str()
-    tag = fields.Str()
-    base_image = fields.Str()
-    description = fields.Str()
-    cargo = fields.Str()
-    bucket = fields.Str()
+    name = fields.Str(required=True)
+    tag = fields.Str(required=True)
+    base_image = fields.Str(required=True)
+    description = fields.Str(required=True)
+    cargo = fields.Str(required=True)
+    bucket = fields.Str(required=True)
 
 
 class BlueprintSchema(Schema):
