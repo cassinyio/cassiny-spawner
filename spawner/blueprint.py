@@ -1,7 +1,7 @@
 """Blueprint controller."""
 
 import logging
-from typing import Dict
+from typing import IO
 
 from spawner.base_service import BaseService
 
@@ -14,31 +14,17 @@ class Blueprint(BaseService):
     def __init__(self, spawner) -> None:
         self._spawner = spawner
 
-    async def create(self, name: str, fileobj: Dict):
-        """
-        Create a new job as a Docker service.
-
-        Parameters
-        -----------
-        tag
-            unique name for the probe.
-        fileobj
-            user id.
-
-
-        """
+    async def create(self, name: str, fileobj: IO):
+        """Build a blueprint using a fileobj."""
+        log.info("Bulding image {name}")
         service_id = await self._spawner.build(
             name=name,
             fileobj=fileobj,
         )
-
-        #service_id = await self._spawner.push(name=name)
         return service_id
 
     async def push(self, name: str, username: str, password: str):
-        """
-        Push a docker image to a registry.
-        """
+        """Push a docker image to a registry."""
         auth = {"username": username, "password": password}
         service_id = await self._spawner.push(name=name, auth=auth)
         return service_id

@@ -46,6 +46,7 @@ class CreateFromS3:
             resp = await client.list_objects(Bucket=self.bucket)
             set_objects = {obj["Key"] for obj in resp['Contents']}
 
+            log.info(f"Getting {len(set_objects)} objects from {self.cargo}@{self.bucket}")
             # add all the objects inside the remote repo
             for obj in set_objects:
                 # get object from s3
@@ -77,8 +78,10 @@ class CreateFromS3:
 
             # close the tar object
             tarobj.close()
-
             self.tar_tempfile.seek(0)
+
+            log.info("Tar creation completed.")
+
             return self.tar_tempfile
 
     async def __aexit__(self, exc_type, exc, tb):

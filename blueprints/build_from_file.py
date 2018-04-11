@@ -64,7 +64,7 @@ class CreateFromFile:
         # close the tar object
         new_tarobj.close()
 
-        log.info(f"{self.file_path} creation completed.")
+        log.info(f"Tar {self.file_path} creation completed.")
 
         self.tar_tempfile.seek(0)
         return self.tar_tempfile
