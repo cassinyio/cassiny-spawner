@@ -239,7 +239,7 @@ class ServiceManager:
         return resp
 
     async def build(self, name: str, fileobj):
-        """Build blueprints."""
+        """Build docker images."""
         log.info(f"Building image {name}.")
         building_image = await self.docker.images.build(
             fileobj=fileobj,
