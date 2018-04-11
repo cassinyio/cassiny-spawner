@@ -103,7 +103,7 @@ class BuildFromS3(WebView):
             "s3_secret": cargo.specs['secret_key'],
             "blueprint": blueprint,
         }
-        await streaming.publish("service.create.blueprint", event)
+        await streaming.publish("service.blueprint.create", event)
 
         return json_response({"message": f"We are creating your blueprint({uuid})."})
 
