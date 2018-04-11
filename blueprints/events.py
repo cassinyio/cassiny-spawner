@@ -48,8 +48,8 @@ async def create_blueprint(queue, event, app):
 
     await Spawner.blueprint.push(
         name=image_name,
-        username=Config.REGISTRY_USER,
-        password=Config.REGISTRY_PASSWORD
+        username="cassinyio",
+        password="33YNXtvNJnKcpLfggxP5UKWTH"
     )
 
     query = mBlueprint.insert().values(
