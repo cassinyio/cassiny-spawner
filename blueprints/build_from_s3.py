@@ -84,4 +84,3 @@ class CreateFromS3:
     async def __aexit__(self, exc_type, exc, tb):
         """Close the tempfile."""
         self.tar_tempfile.close()
-        log.info(f"File {self.file_path} removed.")
