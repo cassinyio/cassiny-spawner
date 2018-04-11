@@ -36,10 +36,11 @@ class CreateFromS3:
         tarobj = tarfile.open(mode='w:gz', fileobj=self.tar_tempfile)
 
         async with session.create_client(
-                's3', use_ssl=False,
-                endpoint_url=self.cargo,
+                's3', use_ssl=True,
+                endpoint_url=f"{self.cargo}.cssny.space",
                 aws_secret_access_key=self.s3_skey,
-                aws_access_key_id=self.s3_key) as client:
+                aws_access_key_id=self.s3_key
+        ) as client:
 
             # get list of objects for the bucket
             resp = await client.list_objects(Bucket=self.bucket)
