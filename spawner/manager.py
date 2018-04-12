@@ -203,16 +203,14 @@ class ServiceManager:
             TaskTemplate['Resources'] = resources
 
         # set fluentd as a logger
-        # disabled for now
-        '''
         TaskTemplate['LogDriver'] = {
             "Name": "fluentd",
             "Options": {
                 "fluentd-async-connect": "true",
+                "fluentd-address": "unix:///tmp/fluent-bit.sock",
                 "labels": "com.docker.swarm.service.name,user_id,uuid"
             }
         }
-        '''
 
         TaskTemplate['ContainerSpec'] = container_spec
 
