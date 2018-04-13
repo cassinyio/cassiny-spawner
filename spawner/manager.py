@@ -207,7 +207,7 @@ class ServiceManager:
             "Name": "fluentd",
             "Options": {
                 "fluentd-async-connect": "true",
-                "fluentd-address": "unix:///fluent-bit/fluent-bit.sock",
+                "fluentd-address": "unix:///bind-fluent-bit/fluent-bit.sock",
                 "labels": "com.docker.swarm.service.name,user_id,uuid"
             }
         }
