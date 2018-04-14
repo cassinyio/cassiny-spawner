@@ -206,6 +206,7 @@ class ServiceManager:
         TaskTemplate['LogDriver'] = {
             "Name": "fluentd",
             "Options": {
+                "fluentd-async-connect": "true",
                 "fluentd-address": "unix:///bind-fluent-bit/fluent-bit.sock",
                 "labels": "com.docker.swarm.service.name,user_id,uuid"
             }
