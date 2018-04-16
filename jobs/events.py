@@ -65,7 +65,7 @@ async def create_job(queue, event, app):
     )
 
     if not service:
-        log.error(f"Job({uuid}) failed, deleting db entry.")
+        log.error(f"Job({uuid}) creation failed.")
         return
 
     event = {
