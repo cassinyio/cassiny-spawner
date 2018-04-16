@@ -26,6 +26,8 @@ mJob = Table(
     Column('name', String(100), unique=True),
     Column('created_at', DateTime(timezone=True),
            server_default=func.now()),
+    Column('deleted_at', DateTime(timezone=True),
+           nullable=True),
     Column('specs', JSONB),
     Column('description', String(255)),
     Column('status', Integer, default=0),
@@ -35,26 +37,37 @@ mJob = Table(
 )
 
 
-async def delete_job(db, job_ref: str, user_id: str):
+async def update_job_status(db, job_ref: str, user_id: str):
     """Remove a job from the database."""
     try:
         uuid.UUID(job_ref)
     except ValueError:
-        query = mJob.delete()\
+        query = mJob.update()\
             .where(
             (mJob.c.user_id == user_id) &
             (mJob.c.name == job_ref)
         )
     else:
-        query = mJob.delete()\
+        query = mJob.update()\
             .where(
             (mJob.c.user_id == user_id) &
             (mJob.c.uuid == job_ref)
         )
+
     async with db.acquire() as conn:
-        result = await conn.execute(query.returning(mJob.c.uuid, mJob.c.name))
+        result = await conn.execute(query.values(deleted_at=func.now())
+                                    .returning(mJob.c.uuid, mJob.c.name))
         row = await result.fetchone()
     return row
+
+
+async def update_job_status_with_uuid(db, job_uuid: str):
+    """Remove a job from the database."""
+
+    query = mJob.update().where(mJob.c.uuid == uuid.UUID(job_uuid)).values(deleted_at=func.now())
+
+    async with db.acquire() as conn:
+        await conn.execute(query)
 
 
 async def select_job(db, job_ref: str, user_id: str):

@@ -92,6 +92,8 @@ def upgrade():
         Column('name', String(100), unique=True),
         Column('created_at', DateTime(timezone=True),
                server_default=func.now()),
+        Column('deleted_at', DateTime(timezone=True),
+               nullable=True),
         Column('specs', JSONB),
         Column('description', String(255)),
         Column('status', Integer, default=0),

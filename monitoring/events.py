@@ -8,7 +8,8 @@ from sqlalchemy.exc import IntegrityError
 
 from apis import mApi
 from cargos import mCargo
-from jobs import mJob
+from jobs.helpers import delete_a_job
+from jobs.models import mJob, update_job_status_with_uuid
 from monitoring.models import add_log, update_service_status
 from probes import mProbe
 
@@ -32,6 +33,10 @@ async def service_notification(queue, event, app):
     if model is None:
         log.error(f"Invalid service type {event['service_type']}")
         return
+
+    if event['service_type'] == 'job' and event['action'] == 'die':
+        update_job_status_with_uuid(app['db'], event['uuid'])
+        await delete_a_job(event['uuid'], event['name'], event['user_id'])
 
     try:
         await add_log(app['db'], event)
