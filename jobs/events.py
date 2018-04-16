@@ -5,7 +5,7 @@ import logging
 from rampante import streaming, subscribe_on
 
 from blueprints.models import get_blueprint
-from jobs.models import delete_job, mJob
+from jobs.models import mJob
 from spawner import Spawner
 from utils import naminator, query_db
 
@@ -65,21 +65,7 @@ async def create_job(queue, event, app):
     )
 
     if not service:
-        log.error(f"Job({uuid}) failed, deleting db entry.")
-
-        await delete_job(db=app['db'], job_ref=uuid, user_id=user_id)
-        log.info(f"DB entry for job({uuid}) deleted.")
-
-        event = {
-            "user_id": user_id,
-            "uuid": uuid,
-            "data": {
-                "status": "error",
-                "message": "The creation of your job failed.",
-            }
-        }
-
-        await streaming.publish("user.notification", event)
+        log.error(f"Job({uuid}) creation failed.")
         return
 
     event = {

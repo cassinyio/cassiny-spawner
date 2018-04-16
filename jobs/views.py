@@ -12,7 +12,8 @@ from aiohttp.web import json_response
 from rampante import streaming
 
 from blueprints.models import join_blueprints_with
-from jobs.models import delete_job, mJob, select_job
+from jobs.helpers import delete_a_job
+from jobs.models import mJob, select_job, update_job_status
 from jobs.serializers import JobSchema
 from spawner import Spawner
 from utils import WebView, get_uuid, verify_token
@@ -69,21 +70,14 @@ class Jobs(WebView):
         user_id = payload["user_id"]
         job_ref = self.request.match_info.get("job_ref")
 
-        deleted_job = await delete_job(self.db, job_ref=job_ref, user_id=user_id)
+        deleted_job = await update_job_status(self.db, job_ref=job_ref, user_id=user_id)
 
         if deleted_job is None:
-            error = "That job doesn't exist anymore."
+            error = f"That job {job_ref} doesn't exist anymore."
             return json_response({"error": error}, status=400)
 
-        await Spawner.job.delete(name=deleted_job.name)
+        await delete_a_job(deleted_job.uuid, deleted_job.name, user_id)
 
-        event = {
-            "uuid": deleted_job.uuid,
-            "user_id": user_id,
-            "name": deleted_job.name,
-        }
-
-        await streaming.publish("service.job.deleted", event)
         user_message = f"Job {deleted_job.name} removed."
         return json_response({"message": user_message})
 
@@ -99,7 +93,7 @@ class Logs(WebView):
         selected_job = await select_job(db=self.db, job_ref=job_ref, user_id=user_id)
 
         if selected_job is None:
-            user_message = f"It seems that probe doesn't exist anymore."
+            user_message = f"It seems that job {job_ref} doesn't exist anymore."
             return json_response({"error": user_message}, status=400)
 
         logs = await Spawner.job.logs(name=selected_job.name)
