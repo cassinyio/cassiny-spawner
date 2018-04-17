@@ -37,7 +37,7 @@ async def service_notification(queue, event, app):
     # remove a job after exited
     if event['service_type'] == 'job' and event['action'] == 'die':
         log.info(f"Removing job({event['uuid']}) with name {event['name']} after exited.")
-        update_job_status_with_uuid(app['db'], event['uuid'])
+        await update_job_status_with_uuid(app['db'], event['uuid'])
         await delete_a_job(event['uuid'], event['name'], event['user_id'])
 
     try:
