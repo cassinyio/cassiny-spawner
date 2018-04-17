@@ -61,10 +61,10 @@ async def update_job_status(db, job_ref: str, user_id: str):
     return row
 
 
-async def update_job_status_with_uuid(db, job_uuid: str):
+async def update_job_status_with_uuid(db, job_uuid: str) -> None:
     """Remove a job from the database."""
 
-    query = mJob.update().where(mJob.c.uuid == uuid.UUID(job_uuid)).values(deleted_at=func.now())
+    query = mJob.update().where(mJob.c.uuid == job_uuid).values(deleted_at=func.now())
 
     async with db.acquire() as conn:
         await conn.execute(query)
