@@ -66,6 +66,7 @@ class Config():
     # registry user and password
     REGISTRY_USER = os.getenv("REGISTRY_USER", "")
     REGISTRY_PASSWORD = os.getenv("REGISTRY_PASSWORD", "")
+    REGISTRY_URI = "http://cassiny-registry:5000/v2"
 
     # LOGGING CONFIGURATION
     DEFAULT_LOGGING = {

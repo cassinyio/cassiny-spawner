@@ -135,8 +135,9 @@ class ServiceManager:
             instance_name = f"instance-{specs['uuid']}"
             placement.append(f"node.hostname == {instance_name}")
 
-        if specs.get('gpu', False):
-            placement.append("node.labels.gpu == true")
+        # we use the node hostname to decide where to run the service
+        # if specs.get('gpu', False):
+        #    placement.append("node.labels.gpu == true")
 
         return placement
 
