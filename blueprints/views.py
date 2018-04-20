@@ -58,20 +58,31 @@ class Blueprint(WebView):
             error = "That Blueprint doesn't exist anymore."
             return json_response({"error": error}, status=400)
 
-        deleted_blueprint = await delete_blueprint(self.db, blueprint_ref=data['reference'], user_id=user_id)
-        if deleted_blueprint is None:
+        blueprint = await delete_blueprint(self.db, blueprint_ref=data['reference'], user_id=user_id)
+        if blueprint is None:
             log.info(f"Blueprint doesn't exist inside the database: {data['reference']}")
             error = "That Blueprint doesn't exist anymore."
             return json_response({"error": error}, status=400)
 
         event = {
-            "uuid": deleted_blueprint.uuid,
+            "uuid": blueprint.uuid,
             "user_id": user_id,
-            "name": deleted_blueprint.name,
+            "name": blueprint.name,
         }
 
+        repository = f"{blueprint.repository}/{blueprint.name}"
+
+        async with aiohttp.ClientSession() as session:
+            url = f"{Config.REGISTRY_URI}/{repository}/manifests/{blueprint.tag}"
+            headers = {'content-type': 'application/vnd.docker.distribution.manifest.v2+json'}
+            async with session.get(url, headers=headers) as response:
+                digest = response.headers.get('Docker-Content-Digest')
+
+            async with session.delete(f"{Config.REGISTRY_URI}/{repository}/manifests/{digest}") as response:
+                return await response.text()
+
         await streaming.publish("service.blueprint.deleted", event)
-        message = f"We are removing {deleted_blueprint.name}"
+        message = f"We are removing {blueprint.name}"
         return json_response({"message": message})
 
 
