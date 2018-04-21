@@ -2,6 +2,7 @@
 
 import logging
 
+import aiohttp
 from rampante import streaming, subscribe_on
 
 from blueprints.build_from_file import CreateFromFile
@@ -70,3 +71,29 @@ async def create_blueprint(queue, event, app):
     }
 
     await streaming.publish("service.blueprint.completed", event)
+
+
+@subscribe_on("service.blueprint.deleted")
+async def remove_image(queue, event, app):
+    """Task `blueprint.deleted` events."""
+
+    repository = event['repository']
+    tag = event['tag']
+
+    async with aiohttp.ClientSession() as session:
+        url = f"{Config.REGISTRY_URI}/{repository}/manifests/{tag}"
+        headers = {'content-type': 'application/vnd.docker.distribution.manifest.v2+json'}
+        async with session.get(url, headers=headers) as resp:
+            digest = resp.headers.get('Docker-Content-Digest')
+            if resp.status // 100 == 2 and digest:
+                async with session.delete(f"{Config.REGISTRY_URI}/{repository}/manifests/{digest}") as resp:
+                    if resp.status // 100 == 2:
+                        log.info(f"Image {event['repository']}:{tag} correctly deleted.")
+                    else:
+                        payload = await resp.json()
+                        log.info(f"Impossible to delete image {repository}:{tag}, error_code: {resp.status} {payload}")
+            else:
+                payload = await resp.json()
+                log.info(f"Impossible to delete image {repository}:{tag}, error_code: {resp.status} {payload}")
+
+    await streaming.publish("service.image.removed", event)
