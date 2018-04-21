@@ -122,6 +122,57 @@ async def get_blueprint(db, blueprint_ref: str, user_id: str):
     return row
 
 
+async def get_your_blueprint(db, blueprint_ref: str, user_id: str):
+    """You can delete only your blueprints."""
+    try:
+        uuid.UUID(blueprint_ref)
+    except ValueError:
+        # blueprint_ref is not a uuid
+        blueprint_data = blueprint_ref.split("/")
+        tag = "latest"
+
+        if len(blueprint_data) == 2:
+            repository, name = blueprint_data
+
+            name_data = name.split(":")
+            if len(name_data) == 2:
+                name, tag = name_data
+
+        elif len(blueprint_data) == 3:
+            repository = "/".join(blueprint_data[:2])
+            name = blueprint_data[-1]
+
+            name_data = name.split(":")
+            if len(name_data) == 2:
+                name, tag = name_data
+
+        else:
+            return None
+
+        query = mBlueprint.select().where(
+            (
+                (mBlueprint.c.repository == repository) &
+                (mBlueprint.c.name == name) &
+                (mBlueprint.c.tag == tag)
+            ) &
+            (
+                mBlueprint.c.user_id == user_id
+            )
+        )
+    else:
+        query = mBlueprint.select().where(
+            (mBlueprint.c.uuid == blueprint_ref) &
+            (
+                mBlueprint.c.user_id == user_id
+            )
+        )
+
+    async with db.acquire() as conn:
+        result = await conn.execute(query)
+        row = await result.fetchone()
+    return row
+
+
 async def delete_blueprint(db, blueprint_ref: str, user_id: str):
     """Remove a blueprint from the database."""
     blueprint = await get_blueprint(db, blueprint_ref, user_id)
