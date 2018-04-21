@@ -241,7 +241,7 @@ class ServiceManager:
         """Build docker images."""
         building_image = await self.docker.images.build(
             fileobj=fileobj,
-            q=True,
+            quiet=True,
             encoding="gzip",
             tag=name
         )
