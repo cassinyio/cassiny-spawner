@@ -7,7 +7,7 @@ from rampante import streaming, subscribe_on
 
 from blueprints.build_from_file import CreateFromFile
 from blueprints.build_from_s3 import CreateFromS3
-from blueprints.models import mBlueprint
+from blueprints.models import mBlueprint, upsert_blueprint
 from config import Config
 from spawner import Spawner
 
@@ -55,7 +55,8 @@ async def create_blueprint(queue, event, app):
     )
 
     log.info(f"Saving image {image_name} inside the db.")
-    query = mBlueprint.insert().values(
+    await upsert_blueprint(
+        db=app['db'],
         uuid=event['uuid'],
         repository=f"{registry}/{user}",
         name=blueprint['name'],
@@ -63,8 +64,6 @@ async def create_blueprint(queue, event, app):
         user_id=user_id,
         description=blueprint["description"]
     )
-    async with app['db'].acquire() as conn:
-        await conn.execute(query)
 
     event = {
         "user_id": user_id,
