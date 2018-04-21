@@ -17,8 +17,8 @@ from sqlalchemy import (
     UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.sql import func, select
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.sql import func, select
 
 from factory import metadata
 
