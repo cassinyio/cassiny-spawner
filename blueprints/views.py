@@ -67,19 +67,9 @@ class Blueprint(WebView):
         event = {
             "uuid": blueprint.uuid,
             "user_id": user_id,
-            "name": blueprint.name,
+            "repository": f"{blueprint.repository}/{blueprint.name}",
+            "tag": blueprint.tag
         }
-
-        repository = f"{blueprint.repository}/{blueprint.name}"
-
-        async with aiohttp.ClientSession() as session:
-            url = f"{Config.REGISTRY_URI}/{repository}/manifests/{blueprint.tag}"
-            headers = {'content-type': 'application/vnd.docker.distribution.manifest.v2+json'}
-            async with session.get(url, headers=headers) as response:
-                digest = response.headers.get('Docker-Content-Digest')
-
-            async with session.delete(f"{Config.REGISTRY_URI}/{repository}/manifests/{digest}") as response:
-                return await response.text()
 
         await streaming.publish("service.blueprint.deleted", event)
         message = f"We are removing {blueprint.name}"
