@@ -7,7 +7,7 @@ from rampante import streaming, subscribe_on
 
 from blueprints.build_from_file import CreateFromFile
 from blueprints.build_from_s3 import CreateFromS3
-from blueprints.models import mBlueprint, upsert_blueprint
+from blueprints.models import upsert_blueprint
 from config import Config
 from spawner import Spawner
 
