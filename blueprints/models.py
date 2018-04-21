@@ -17,6 +17,7 @@ from sqlalchemy import (
     UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import func, select
 
 from factory import metadata
@@ -182,3 +183,42 @@ async def delete_blueprint(db, blueprint_ref: str, user_id: str):
             await conn.execute(query)
         return blueprint
     return None
+
+
+async def upsert_blueprint(
+    db,
+    uuid: str,
+    repository: str,
+    user_id: str,
+    name: str,
+    tag: str,
+    description: str
+):
+    """Insert or update a blueprint."""
+    query = mBlueprint.insert().values(
+        uuid=uuid,
+        repository=repository,
+        name=name,
+        tag=tag,
+        user_id=user_id,
+        description=description
+    )
+
+    try:
+        async with db.acquire() as conn:
+            await conn.execute(query)
+    except IntegrityError:
+        query = mBlueprint.update()\
+            .where(
+            (mBlueprint.c.repository == repository) &
+            (mBlueprint.c.name == name) &
+            (mBlueprint.c.tag == tag)
+        )\
+            .values(
+            uuid=uuid,
+            description=description,
+            deleted_at=func.now()
+        )
+
+        async with db.acquire() as conn:
+            await conn.execute(query)
