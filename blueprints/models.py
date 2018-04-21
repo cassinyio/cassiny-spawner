@@ -123,7 +123,7 @@ async def get_blueprint(db, blueprint_ref: str, user_id: str):
 
 
 async def get_your_blueprint(db, blueprint_ref: str, user_id: str):
-    """You can delete only your blueprints."""
+    """Get the blueprint only if you are the owner."""
     try:
         uuid.UUID(blueprint_ref)
     except ValueError:
@@ -175,7 +175,7 @@ async def get_your_blueprint(db, blueprint_ref: str, user_id: str):
 
 async def delete_blueprint(db, blueprint_ref: str, user_id: str):
     """Remove a blueprint from the database."""
-    blueprint = await get_blueprint(db, blueprint_ref, user_id)
+    blueprint = await get_your_blueprint(db, blueprint_ref, user_id)
     if blueprint:
         query = mBlueprint.delete().where(mBlueprint.c.uuid == blueprint.uuid)
         async with db.acquire() as conn:
