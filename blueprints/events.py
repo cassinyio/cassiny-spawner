@@ -47,12 +47,14 @@ async def create_blueprint(queue, event, app):
                 name=image_name,
             )
 
+    log.info(f"Pushing image {image_name} to te registry.")
     await Spawner.blueprint.push(
         name=image_name,
         username=Config.REGISTRY_USER,
         password=Config.REGISTRY_PASSWORD
     )
 
+    log.info(f"Saving image {image_name} inside the db.")
     query = mBlueprint.insert().values(
         uuid=event['uuid'],
         repository=f"{registry}/{user}",
