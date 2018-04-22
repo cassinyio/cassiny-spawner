@@ -85,6 +85,8 @@ async def remove_image(queue, event, app):
         url = f"{Config.REGISTRY_URI}/{repository}/manifests/{tag}"
         headers = {'content-type': 'application/vnd.docker.distribution.manifest.v2+json'}
         async with session.head(url, headers=headers) as resp:
+            log.info(resp.headers)
+            log.info(url)
             digest = resp.headers.get('Docker-Content-Digest')
             if resp.status // 100 == 2 and digest:
                 async with session.delete(f"{Config.REGISTRY_URI}/{repository}/manifests/{digest}") as resp:
