@@ -7,6 +7,7 @@ All rights reserved.
 
 import uuid
 
+from psycopg2 import IntegrityError
 from sqlalchemy import (
     Boolean,
     Column,
@@ -17,7 +18,6 @@ from sqlalchemy import (
     UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import func, select
 
 from factory import metadata
