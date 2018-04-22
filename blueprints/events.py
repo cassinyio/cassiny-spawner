@@ -47,7 +47,7 @@ async def create_blueprint(queue, event, app):
                 name=image_name,
             )
 
-    log.info(f"Pushing image {image_name} to te registry.")
+    log.info(f"Pushing image {image_name} to the registry.")
     await Spawner.blueprint.push(
         name=image_name,
         username=Config.REGISTRY_USER,
@@ -84,7 +84,7 @@ async def remove_image(queue, event, app):
     async with aiohttp.ClientSession() as session:
         url = f"{Config.REGISTRY_URI}/{repository}/manifests/{tag}"
         headers = {'content-type': 'application/vnd.docker.distribution.manifest.v2+json'}
-        async with session.get(url, headers=headers) as resp:
+        async with session.head(url, headers=headers) as resp:
             digest = resp.headers.get('Docker-Content-Digest')
             if resp.status // 100 == 2 and digest:
                 async with session.delete(f"{Config.REGISTRY_URI}/{repository}/manifests/{digest}") as resp:
@@ -95,6 +95,6 @@ async def remove_image(queue, event, app):
                         log.info(f"Impossible to delete image {repository}:{tag}, error_code: {resp.status} {payload}")
             else:
                 payload = await resp.json()
-                log.info(f"Impossible to delete image {repository}:{tag}, error_code: {resp.status} {payload}")
+                log.info(f"Impossible to find digest for {repository}:{tag}, error_code: {resp.status} {payload}")
 
     await streaming.publish("service.image.removed", event)
