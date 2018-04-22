@@ -78,7 +78,7 @@ async def create_blueprint(queue, event, app):
 async def remove_image(queue, event, app):
     """Task `blueprint.deleted` events."""
 
-    repository = event['repository']
+    repository = event['repository'].replace("registry.cassiny.io/", "")
     tag = event['tag']
 
     async with aiohttp.ClientSession() as session:
