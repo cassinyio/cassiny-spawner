@@ -83,7 +83,7 @@ async def remove_image(queue, event, app):
 
     async with aiohttp.ClientSession() as session:
         url = f"{Config.REGISTRY_URI}/{repository}/manifests/{tag}"
-        headers = {'content-type': 'application/vnd.docker.distribution.manifest.v2+json'}
+        headers = {'Accept': 'application/vnd.docker.distribution.manifest.v2+json'}
         async with session.head(url, headers=headers) as resp:
             log.info(resp.headers)
             log.info(url)
