@@ -217,7 +217,7 @@ async def upsert_blueprint(
             .values(
             uuid=uuid,
             description=description,
-            deleted_at=func.now()
+            created_at=func.now()
         )
 
         async with db.acquire() as conn:
