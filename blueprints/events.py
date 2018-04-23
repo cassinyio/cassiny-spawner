@@ -85,18 +85,17 @@ async def remove_image(queue, event, app):
         url = f"{Config.REGISTRY_URI}/{repository}/manifests/{tag}"
         headers = {'Accept': 'application/vnd.docker.distribution.manifest.v2+json'}
         async with session.head(url, headers=headers) as resp:
-            log.info(resp.headers)
-            log.info(url)
             digest = resp.headers.get('Docker-Content-Digest')
             if resp.status // 100 == 2 and digest:
-                async with session.delete(f"{Config.REGISTRY_URI}/{repository}/manifests/{digest}") as resp:
+                url = f"{Config.REGISTRY_URI}/{repository}/manifests/{digest}"
+                async with session.delete(url) as resp:
                     if resp.status // 100 == 2:
                         log.info(f"Image {event['repository']}:{tag} correctly deleted.")
                     else:
                         payload = await resp.json()
-                        log.info(f"Impossible to delete image {repository}:{tag}, error_code: {resp.status} {payload}")
+                        log.info(f"Error while deleting {repository}:{tag} with {url}, error_code {resp.status} {payload}")
             else:
                 payload = await resp.json()
-                log.info(f"Impossible to find digest for {repository}:{tag}, error_code: {resp.status} {payload}")
+                log.info(f"Digest not found for {repository}:{tag} with {url}, error_code {resp.status} {payload}")
 
     await streaming.publish("service.image.removed", event)
