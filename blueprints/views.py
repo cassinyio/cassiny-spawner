@@ -61,18 +61,20 @@ class Blueprint(WebView):
         blueprint = await delete_blueprint(self.db, blueprint_ref=data['reference'], user_id=user_id)
         if blueprint is None:
             log.info(f"Blueprint doesn't exist inside the database: {data['reference']}")
-            error = "That Blueprint doesn't exist anymore."
+            error = f"That Blueprint doesn't exist {data['reference']}."
             return json_response({"error": error}, status=400)
+
+        repository = f"{blueprint.repository}/{blueprint.name}"
 
         event = {
             "uuid": blueprint.uuid,
             "user_id": user_id,
-            "repository": f"{blueprint.repository}/{blueprint.name}",
+            "repository": repository,
             "tag": blueprint.tag
         }
 
         await streaming.publish("service.blueprint.deleted", event)
-        message = f"We are removing {blueprint.name}"
+        message = f"We are removing the blueprint {repository}:{blueprint.tag}"
         return json_response({"message": message})
 
 
