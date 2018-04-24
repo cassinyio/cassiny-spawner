@@ -10,7 +10,6 @@ import uuid
 from sqlalchemy import (
     Column,
     DateTime,
-    ForeignKey,
     Integer,
     String,
     Table,
@@ -32,8 +31,7 @@ mJob = Table(
     Column('description', String(255)),
     Column('status', Integer, default=0),
     Column('user_id', Integer, nullable=False),
-    Column('blueprint_uuid', UUID,
-           ForeignKey("blueprints.uuid"), nullable=False),
+    Column('blueprint_uuid', UUID),
 )
 
 
