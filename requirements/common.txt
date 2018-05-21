@@ -7,5 +7,5 @@ psycopg2==2.7.4
 PyJWT==1.6.3
 rampante==0.0.14
 SQLAlchemy==1.2.7
-marshmallow==2.15.1
+marshmallow==2.15.3
 cryptography==2.2.2
