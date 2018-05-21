@@ -4,7 +4,7 @@ aiodocker==0.13.0
 aiohttp==3.2.1
 aiopg==0.14.0
 psycopg2==2.7.4
-PyJWT==1.6.1
+PyJWT==1.6.3
 rampante==0.0.14
 SQLAlchemy==1.2.7
 marshmallow==2.15.1
