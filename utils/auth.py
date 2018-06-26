@@ -29,7 +29,7 @@ def _validate_token(headers: Mapping, key: bytes=C.PUBLIC_KEY) -> Optional[Mappi
     Return the payload if correct, None in the other cases.
     The payload contains the token.
     """
-    payload: Mapping[str, Any] = None
+    payload: Optional[Mapping[str, Any]] = None
     if "Authorization" in headers:
         try:
             encoded: str = headers['Authorization'].split('Bearer ')[1]
